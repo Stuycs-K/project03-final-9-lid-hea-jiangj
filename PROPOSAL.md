@@ -54,3 +54,10 @@ What algorithms and /or data structures you will be using, and how.
 
 A timeline with expected completion dates of parts of the project.
 
+Jan 8 - Users are able concurrently to post questions and replies. Terminal will display all posts/replies.
+
+Jan 12 - Users will be able to delete/edit posts and replies.
+
+Jan 15 - Users will be able to sort posts based on recency and most replies. Users will be able to search posts based on a specific keyword.
+
+Jan 16 - Project's done.
