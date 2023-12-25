@@ -26,3 +26,6 @@ CW/HW: found group members and thought/discussed of project ideas
 ### 2024-01-03 - Brief description
 CW: brainstormed/discussed project ideas like monopoly, battleship, and eventually decided on reddit. Asked questions/approval from Mr. K
 HW: worked on timemline and project breakdown in PROPOSAL.md
+
+### 2024-01-04 Brief Description
+CW: brainstormed logistics of project. Decided on multiple file system, where each post + its replies would be its own file. Also decided to do a client-server system, where client can only access its own post (file). All displaying of the forum will be in the client, the server will handle processing data. Added networking.c file from lab 16 as reference. Added empty server.c and client.c files. Made own branch and linked with remote branch.
