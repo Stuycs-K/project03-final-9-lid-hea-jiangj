@@ -34,7 +34,7 @@ The user will then be prompted for an input where they may...
 A description of your technical design. This should include:
    
 How you will be using the topics covered in class in the project.
-     
+
 How you are breaking down the project and who is responsible for which parts.
   
 What data structures you will be using and how.
@@ -48,16 +48,23 @@ What algorithms and /or data structures you will be using, and how.
 5. we will utilize signals to allow the user to perform certain actions like closing, deleting, creating, etc.
 6. we will utilize processes like forking to create a child process when modifying content in the forum on the server side
 
+Project Breakdown:
+
+1. Displaying the forum in the terminal - Alvin, Jack, Derek
+2. Implementing posts + replies - Alvin, Jack, Derek
+3. Sort Posts - Alvin
+4. Delete/Edit posts - Jack
+5. Search Posts - Derek
 
 
 # Intended pacing:
 
 A timeline with expected completion dates of parts of the project.
 
-Jan 8 - Users are able concurrently to post questions and replies. Terminal will display all posts/replies.
+Jan 8 - Users are able to post questions and replies. Terminal will display all posts/replies.
 
-Jan 12 - Users will be able to delete/edit posts and replies.
+Jan 15 - Users will be able to delete/edit posts and replies.
+Users will be able to sort posts based on recency and most replies. Users will be able to search posts based on a specific keyword in the post or replies.
 
-Jan 15 - Users will be able to sort posts based on recency and most replies. Users will be able to search posts based on a specific keyword.
 
 Jan 16 - Project's done.
