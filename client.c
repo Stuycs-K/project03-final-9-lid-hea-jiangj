@@ -3,23 +3,34 @@
 void clientLogic(int server_socket){
     // Prompts the user for a string.
     char input[BUFFER_SIZE];
-    printf("Post something: ");
+    printf("Input a command (post or reply): ");
     fgets(input, sizeof(input), stdin);
-    // Send the user input to the client.
-    write(server_socket, input, sizeof(input));
+    *strchr(input, '\n') = 0;
+    write(server_socket,input,sizeof(input));
+    if (strcmp(input,"post")==0) {
+        printf("Enter your post: ");
+        fgets(input, sizeof(input), stdin);
+        // Send the user input to the client.
+        write(server_socket, input, sizeof(input));
+
+        // Read the modified string from the server
+        read(server_socket, input, sizeof(input));
 
 
-    // Read the modified string from the server
-    read(server_socket, input, sizeof(input));
-
-
-    // Prints the modified string
-    printf("Modified string: %s\n", input);
+        // Prints the modified string
+        printf("Modified string: %s\n", input);
+    }
+    else if (strcmp(input,"reply")==0) {
+        printf("Reply isn't working rn!\n");
+    }
+    else {
+        printf("Not a valid command!\n");
+    }
 }
 
 
 int main(int argc, char *argv[] ) {
-    char* IP = NULL;
+    char* IP = "127.0.0.1";
     if(argc>1){
         IP=argv[1];
     }
@@ -40,6 +51,8 @@ int main(int argc, char *argv[] ) {
     sb.sem_op = -1;
     semop(semd, &sb, 1);
 
+    //displaying the forum
+    
 
     int server_socket = client_tcp_handshake(IP);
     printf("client connected.\n");
