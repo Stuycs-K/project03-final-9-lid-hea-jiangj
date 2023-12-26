@@ -32,24 +32,15 @@ static void sighandler( int signo ) {
 
 
 void subserver_logic(int client_socket){
-    printf("this func ran\n");
     int forum = open("forum.txt",O_WRONLY | O_APPEND);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
-    char recent3[3][BUFFER_SIZE];
-    fseek(forum2, 0, SEEK_END);
-    int counter = 0;
-    long int pos = ftell(forum2);
-    /* Don't write each char on output.txt, just search for '\n' */
     char accum[BUFFER_SIZE];
-    while (counter<3) {
-        fseek(forum2, --pos, SEEK_SET); /* seek from begin */
-        char letter = fgetc(forum2);
-        if (letter == '\n') {
-            printf("%c\n",letter);
-            counter++;
-        }
+    char line[BUFFER_SIZE];
+    while (fgets(line,BUFFER_SIZE,forum2)) {
+        strcat(accum,line);
     }
+    printf("Accum: %s\n",accum);
 
     // Gets the client's command
     char input[BUFFER_SIZE];
@@ -57,6 +48,7 @@ void subserver_logic(int client_socket){
 
     if (strcmp(input,"post")==0) {
         read(client_socket, input, sizeof(input));
+        printf("Input: %s\n",input);
         int *data;
         int shmid;
         shmid = shmget(KEY, sizeof(int), 0640);
@@ -96,54 +88,49 @@ int main(int argc, char *argv[] ) {
     int numStrings = 0;
 
 
-    // semaphore
-    int semd;
-    int set;
-    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
-    if (semd == -1) {
-        printf("errno %d: %s\n", errno, strerror(errno));
-        semd = semget(KEY, 1, 0);
-        set = semctl(semd, 0, GETVAL, 0);
-        printf("Semctl Returned: %d\n", set);
-        exit(1);
-    }
-    else{
-        union semun file;
-        file.val = 1;
-        set = semctl(semd, 0, SETVAL, file);
-        printf("Semctl Returned: %d\n", set);
-    }
+    // // semaphore
+    // int semd;
+    // int set;
+    // semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    // if (semd == -1) {
+    //     printf("errno %d: %s\n", errno, strerror(errno));
+    //     semd = semget(KEY, 1, 0);
+    //     set = semctl(semd, 0, GETVAL, 0);
+    //     printf("Semctl Returned: %d\n", set);
+    //     exit(1);
+    // }
+    // else{
+    //     union semun file;
+    //     file.val = 1;
+    //     set = semctl(semd, 0, SETVAL, file);
+    //     printf("Semctl Returned: %d\n", set);
+    // }
 
 
-    //shared memory
-    int *data;
-    int shmid;
-    shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
-    data = shmat(shmid, 0, 0); //attach
-    printf("*data: %d\n", *data);
-    char line[BUFFER_SIZE];
+    // //shared memory
+    // int *data;
+    // int shmid;
+    // shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+    // data = shmat(shmid, 0, 0); //attach
+    // printf("*data: %d\n", *data);
+    // char line[BUFFER_SIZE];
    
-    while (fgets(line,sizeof(line),forum1)) {
-        if (line[0]=='p') *data = *data + 1;
-    }
-    printf("*data: %d\n", *data);
-    shmdt(data); //detach
-    signal(SIGINT,sighandler);
-    fflush(stdout);
+    // while (fgets(line,sizeof(line),forum1)) {
+    //     if (line[0]=='p') *data = *data + 1;
+    // }
+    // printf("*data: %d\n", *data);
+    // shmdt(data); //detach
+    // signal(SIGINT,sighandler);
 
     while(1){
-        printf("Child ran \n");
         int client_socket = server_tcp_handshake(listen_socket);
-        printf("Child ran \n");
         numStrings++;
-        printf("Child ran \n");
         pid_t f = fork();
-        // if(f < 0) {
-        //     perror("fork fail");
-        //     exit(1);
-        // }
-        if (f == 0){  // child process
-            printf("Child ran \n");
+        if(f < 0) {
+            perror("fork fail");
+            exit(1);
+        }
+        else if (f == 0){  // child process
             subserver_logic(client_socket);
             close(client_socket);
             exit(0);
