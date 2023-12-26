@@ -40,6 +40,7 @@ void subserver_logic(int client_socket){
     while (fgets(line,BUFFER_SIZE,forum2)) {
         strcat(accum,line);
     }
+    accum[strlen(accum)] = '\0';
     printf("Accum: %s\n",accum);
 
     // Gets the client's command
@@ -88,39 +89,39 @@ int main(int argc, char *argv[] ) {
     int numStrings = 0;
 
 
-    // // semaphore
-    // int semd;
-    // int set;
-    // semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
-    // if (semd == -1) {
-    //     printf("errno %d: %s\n", errno, strerror(errno));
-    //     semd = semget(KEY, 1, 0);
-    //     set = semctl(semd, 0, GETVAL, 0);
-    //     printf("Semctl Returned: %d\n", set);
-    //     exit(1);
-    // }
-    // else{
-    //     union semun file;
-    //     file.val = 1;
-    //     set = semctl(semd, 0, SETVAL, file);
-    //     printf("Semctl Returned: %d\n", set);
-    // }
+    // semaphore
+    int semd;
+    int set;
+    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    if (semd == -1) {
+        printf("errno %d: %s\n", errno, strerror(errno));
+        semd = semget(KEY, 1, 0);
+        set = semctl(semd, 0, GETVAL, 0);
+        printf("Semctl Returned: %d\n", set);
+        exit(1);
+    }
+    else{
+        union semun file;
+        file.val = 1;
+        set = semctl(semd, 0, SETVAL, file);
+        printf("Semctl Returned: %d\n", set);
+    }
 
 
-    // //shared memory
-    // int *data;
-    // int shmid;
-    // shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
-    // data = shmat(shmid, 0, 0); //attach
-    // printf("*data: %d\n", *data);
-    // char line[BUFFER_SIZE];
+    //shared memory
+    int *data;
+    int shmid;
+    shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+    data = shmat(shmid, 0, 0); //attach
+    printf("*data: %d\n", *data);
+    char line[BUFFER_SIZE];
    
-    // while (fgets(line,sizeof(line),forum1)) {
-    //     if (line[0]=='p') *data = *data + 1;
-    // }
-    // printf("*data: %d\n", *data);
-    // shmdt(data); //detach
-    // signal(SIGINT,sighandler);
+    while (fgets(line,sizeof(line),forum1)) {
+        if (line[0]=='p') *data = *data + 1;
+    }
+    printf("*data: %d\n", *data);
+    shmdt(data); //detach
+    signal(SIGINT,sighandler);
 
     while(1){
         int client_socket = server_tcp_handshake(listen_socket);
