@@ -35,13 +35,14 @@ void subserver_logic(int client_socket){
     int forum = open("forum.txt",O_WRONLY | O_APPEND);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
-    char accum[BUFFER_SIZE];
+    char accum[BUFFER_SIZE] = "";
     char line[BUFFER_SIZE];
     while (fgets(line,BUFFER_SIZE,forum2)) {
         strcat(accum,line);
     }
     accum[strlen(accum)] = '\0';
     printf("Accum: %s\n",accum);
+    write(client_socket,accum,sizeof(accum));
 
     // Gets the client's command
     char input[BUFFER_SIZE];
