@@ -5,10 +5,9 @@
 
 void clientLogic(int server_socket){
     // Prompts the user for a string.
-    char input[100];
-    printf("Enter a string: ");
+    char input[BUFFER_SIZE];
+    printf("Post something: ");
     fgets(input, sizeof(input), stdin);
-
     // Send the user input to the client.
     write(server_socket, input, sizeof(input));
 
@@ -26,7 +25,8 @@ int main(int argc, char *argv[] ) {
     }
     int server_socket = client_tcp_handshake(IP);
     printf("client connected.\n");
-    while(1){
-        clientLogic(server_socket);
-    }
+    clientLogic(server_socket);
+    // while(1){
+    //     clientLogic(server_socket);
+    // }
 }
