@@ -56,6 +56,9 @@ void clientLogic(int server_socket){
         char* content = file_to_string(post_name);
         printf("Current content of %s: \n%s", post_name, content);
         close(post);
+        printf("Would you like to edit the title or content of the post: ");
+        char choice[BUFFER_SIZE];
+        fgets(choice,sizeof(choice),stdin);
         printf("What would you like to replace it with: ");
         char replacement[BUFFER_SIZE];
         fgets(replacement,sizeof(replacement),stdin);
@@ -69,63 +72,69 @@ void clientLogic(int server_socket){
         char *newLine1 = replacement1;
         int currentLine = 1;
 
-        // Open the original file for reading and a temporary file for writing
-        file = fopen("forum.txt", "r");
-        tempFile = fopen("temp.txt", "w");
+        if (strcmp(choice,"title\n")==0) {
+            file = fopen("forum.txt", "r");
+            tempFile = fopen("temp.txt", "w");
 
-        if (file == NULL || tempFile == NULL) {
-            perror("Error opening file!\n");
-        }
-
-        // Read from the original file and write to the temporary file
-        while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-            // If the current line is the line to replace, write the new line to the temp file
-            if (currentLine == lineToReplace) {
-                fputs(newLine1, tempFile);
-            } else {
-                // Otherwise, write the original line
-                fputs(buffer, tempFile);
+            if (file == NULL || tempFile == NULL) {
+                perror("Error opening file!\n");
             }
-            currentLine++;
-        }
 
-        // Close the files
-        fclose(file);
-        fclose(tempFile);
-
-        // Delete the original file and rename the temporary file to the original file name
-        remove("forum.txt");
-        rename("temp.txt", "forum.txt");
-
-        FILE * pFile = fopen(post_name, "r");
-        tempFile = fopen("temp.txt", "w");
-
-        memset(buffer,0,sizeof(buffer));
-        memset(replacement1,0,sizeof(replacement1));
-        sprintf(replacement1,"p%d: %s",num,replacement);
-        printf("Replacment1: %s",replacement1);
-
-
-        currentLine = 1;
-
-        while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
-            // If the current line is the line to replace, write the new line to the temp file
-            if (currentLine == 1) {
-                printf("This ran!\n");
-                fputs(replacement1, tempFile);
-            } else {
-                // Otherwise, write the original line
-                fputs(buffer, tempFile);
+            // Read from the original file and write to the temporary file
+            while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+                // If the current line is the line to replace, write the new line to the temp file
+                if (currentLine == lineToReplace) {
+                    fputs(newLine1, tempFile);
+                } else {
+                    // Otherwise, write the original line
+                    fputs(buffer, tempFile);
+                }
+                currentLine++;
             }
-            currentLine++;
+
+            // Close the files
+            fclose(file);
+            fclose(tempFile);
+
+            // Delete the original file and rename the temporary file to the original file name
+            remove("forum.txt");
+            rename("temp.txt", "forum.txt");
         }
+        
+        else if (strcmp(choice,"content\n")==0) {
+            FILE * pFile = fopen(post_name, "r");
+            tempFile = fopen("temp.txt", "w");
 
-        fclose(pFile);
-        fclose(tempFile);
+            memset(buffer,0,sizeof(buffer));
+            memset(replacement1,0,sizeof(replacement1));
+            sprintf(replacement1,"p%d: %s",num,replacement);
+            printf("Replacment1: %s",replacement1);
 
-        // Delete the original file and rename the temporary file to the original file name
-        remove(post_name);
-        rename("temp.txt", post_name);
+
+            currentLine = 1;
+
+            while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+                // If the current line is the line to replace, write the new line to the temp file
+                if (currentLine == 1) {
+                    printf("This ran!\n");
+                    fputs(replacement1, tempFile);
+                } else {
+                    // Otherwise, write the original line
+                    fputs(buffer, tempFile);
+                }
+                currentLine++;
+            }
+
+            fclose(pFile);
+            fclose(tempFile);
+
+            // Delete the original file and rename the temporary file to the original file name
+            remove(post_name);
+            rename("temp.txt", post_name);
+        }
+        else {
+            printf("Not a valid command!\n");
+        }
         }
         else {
             printf("Not a valid command!\n");

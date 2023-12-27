@@ -53,3 +53,7 @@ HW: Worked on adding posts to forum.txt so that each post would have p(n) where 
 
 ### 2024-01-7 - Brief description
 HW: Editing feature now allows users to replace specific posts based on number inputted. It replaces the post in forum.txt and the post file created. I did this creating a temp.txt file and renaming it. I will try to work on displaying the forum posts to the client to make it look better.
+
+
+### 2024-01-8 - Brief description
+CW: Changed editing feature so that it you can edit the title and content of a post separately. Forum asks user if they want to change title or content.
