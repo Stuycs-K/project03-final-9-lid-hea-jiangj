@@ -82,7 +82,7 @@ void subserver_logic(int client_socket){
         sprintf(new_input, "p%d: %s", i ,input);
         // printf("%ld\n",strlen(new_input));
         write(forum, new_input, strlen(new_input));
-        printf("%s", new_input);
+        printf("New_input: %s", new_input);
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
