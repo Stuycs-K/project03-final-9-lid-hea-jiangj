@@ -23,6 +23,7 @@ The user will then be prompted for an input where they may...
 3. insert the post ID of the post they want to view to access it's replies
     - once the post ID is chosen, the user can view all of the terminal will display all the information of the post including replies
         - the user will be prompted to enter a reply, choose a reply to reply to, or go exit the post
+        - if the post was posted by the user, then the user will also have the option to edit or remove the post
 4. create a question to post
 
 
