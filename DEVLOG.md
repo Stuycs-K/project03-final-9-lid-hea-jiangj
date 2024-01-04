@@ -10,7 +10,7 @@ CW: brainstormed ideas (battleship, monopoly, reddit)and checked with Mr. K
 HW: worked on proposal file with the idea of a reddit-like question forum
 
 ### 2024-01-03 - Brief description
-CW: discussed logistics of displaying the forum and how to have constant updated forums for all clients without pulling
+CW: discussed logistics of terminal displaying all the posts. also discussed how to keep updating clients with all the most recent posts
 
 ## Player 2: Derek Li
 
