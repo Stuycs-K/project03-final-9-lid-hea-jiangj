@@ -9,9 +9,10 @@ CW/HW: found group members and started thinking of ideas
 CW: brainstormed ideas (battleship, monopoly, reddit)and checked with Mr. K
 HW: worked on proposal file with the idea of a reddit-like question forum
 
-### 2024-01-03 - Brief description
+### 2024-01-04 - Brief description
 CW: discussed logistics of terminal displaying all the posts. also discussed how to keep updating clients with all the most recent posts
 HW: made the base server, client, and makefile. established basic communication between client and server. server can now take input from client and place into a file.
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
