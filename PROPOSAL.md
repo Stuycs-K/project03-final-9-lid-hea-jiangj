@@ -1,8 +1,8 @@
 # Final Project Proposal
 
 ## Group Members:
-Alvin He
-Jack Jiang
+Alvin He;
+Jack Jiang;
 Derek Li
        
 # Intentions:
@@ -40,7 +40,17 @@ How you are breaking down the project and who is responsible for which parts.
 What data structures you will be using and how.
      
 What algorithms and /or data structures you will be using, and how.
-    
+
+1. we will utilize sockets and pipes to allow for networking across our forum from multiple locations via server and client functions
+2. we will utilize programs in <dirent.h> to manage files that contain the contents of each post
+3. we will utilize semaphores to prevent issues when multiple users attempt to reply to a post
+4. we will utilize programs in <sys/stat.h> to sort the files that contain the content of each post
+5. we will utilize signals to allow the user to perform certain actions like closing, deleting, creating, etc.
+6. we will utilize processes like forking to create a child process when modifying content in the forum on the server side
+
+
+
 # Intended pacing:
 
 A timeline with expected completion dates of parts of the project.
+

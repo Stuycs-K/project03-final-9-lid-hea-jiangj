@@ -9,7 +9,7 @@ Alvin He, Jack Jiang, Derek Li
 ### Project Description:
 [Explain what is this project.] temporary
   
-A reddit-like question forum where users can create, edit, reply, and search for post
+A reddit-like question forum where users can create, edit, reply, and search for posts
 
 ### Instructions:
 
