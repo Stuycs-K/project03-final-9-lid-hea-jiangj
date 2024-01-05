@@ -1,12 +1,4 @@
 #include "networking.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/shm.h>
-#include <sys/types.h>
-#include <string.h>
-
 
 // // trim_input trims the input for newlines to be used for parse_args and execute
 // // args:        input, the command to be ran
@@ -32,7 +24,6 @@ static void sighandler( int signo ) {
         int shmid;
         shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
         shmctl(shmid, IPC_RMID, 0);
-
 
         printf("SEGMENT & SHARED MEMORY REMOVED\n");
         exit(0);
@@ -117,7 +108,11 @@ int main(int argc, char *argv[] ) {
         int client_socket = server_tcp_handshake(listen_socket);
         numStrings++;
         pid_t f = fork();
-        if (f == 0){  // child process
+        if(f < 0) {
+            perror("fork fail");
+            exit(1);
+        }
+        else if (f == 0){  // child process
             subserver_logic(client_socket);
             close(client_socket);
             exit(1);

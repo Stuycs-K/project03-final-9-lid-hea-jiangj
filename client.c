@@ -1,8 +1,4 @@
 #include "networking.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 
 void clientLogic(int server_socket){
     // Prompts the user for a string.

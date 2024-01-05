@@ -4,3 +4,5 @@ p3: I want to sleep!
 p4: hello world
 p5: testing semaphore 123
 p6: testing semaphore 321
+p7: testing sema 123
+p8: testing sema 432

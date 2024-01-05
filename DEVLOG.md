@@ -22,6 +22,10 @@ CW/HW: found group members and brainstormed some ideas to propose
 CW: created project repo and brainstormed ideas to propose (decided on reddit-like forum; approval from Mr. K)
 HW: worked on technical details in proposal file and discussed work division and intended timeline with group
 
+### 2024-01-04 - Brief description
+CW: decided on logistics of the program. discussed whether to use a single large file for data storage or multiple smaller files for each post made (still ongoing). decided on server-client based program using sockets for networking and implemented during class.
+HW: established semaphore access. creates shared memory and semaphore on the server side. ups and downs the semaphore on client side to prevent mutliple users from modifying the forum file at the same time. modified sighandler to remove semaphore after kill signal based on a recognizable key.
+
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description
