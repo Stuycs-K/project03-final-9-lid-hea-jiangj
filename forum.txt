@@ -2,3 +2,5 @@ p1: Hello
 p2: Systems Period 9 > Systems Period 10
 p3: I want to sleep!
 p4: hello world
+p5: testing semaphore 123
+p6: testing semaphore 321

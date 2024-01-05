@@ -6,7 +6,7 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <string.h>
-#define KEY 142325
+
 
 // // trim_input trims the input for newlines to be used for parse_args and execute
 // // args:        input, the command to be ran
@@ -20,14 +20,25 @@
 //     }
 // }
 
+
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
+        //removing semaphore
+        int semd;
+        semd = semget(KEY, 1, 0);
+        semctl(semd, IPC_RMID, 0);
+       
+        //removing shared memory
         int shmid;
         shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
         shmctl(shmid, IPC_RMID, 0);
+
+
+        printf("SEGMENT & SHARED MEMORY REMOVED\n");
         exit(0);
     }
 }
+
 
 void subserver_logic(int client_socket){
     int forum = open("forum.txt",O_WRONLY | O_APPEND);
@@ -48,23 +59,26 @@ void subserver_logic(int client_socket){
     printf("%s", new_input);
     write(client_socket, new_input, strlen(new_input));
     shmdt(data); //detach
-  
+ 
 }
 
-union semun { 
+
+union semun {
     int val;
     struct semid_ds *buf;
     unsigned short *array;  
     struct seminfo *__buf;  
  };
 
-int main(int argc, char *argv[] ) { 
+
+int main(int argc, char *argv[] ) {
     int forum = open("forum.txt",O_RDONLY);
     FILE* forum1 = fopen("forum.txt","r");
-    int listen_socket = server_setup(); 
+    int listen_socket = server_setup();
     int numStrings = 0;
 
-    //semaphore
+
+    // semaphore
     int semd;
     int set;
     semd = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
@@ -82,6 +96,7 @@ int main(int argc, char *argv[] ) {
         printf("Semctl Returned: %d\n", set);
     }
 
+
     //shared memory
     int *data;
     int shmid;
@@ -89,13 +104,14 @@ int main(int argc, char *argv[] ) {
     data = shmat(shmid, 0, 0); //attach
     printf("*data: %d\n", *data);
     char line[BUFFER_SIZE];
-    
+   
     while (fgets(line,sizeof(line),forum1)) {
         if (line[0]=='p') *data = *data + 1;
     }
     printf("*data: %d\n", *data);
     shmdt(data); //detach
     signal(SIGINT,sighandler);
+
 
     while(1){
         int client_socket = server_tcp_handshake(listen_socket);
