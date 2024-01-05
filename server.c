@@ -25,6 +25,10 @@ static void sighandler( int signo ) {
         shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
         shmctl(shmid, IPC_RMID, 0);
 
+        int shmid02;
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        shmctl(shmid02, IPC_RMID, 0);
+
         printf("SEGMENT & SHARED MEMORY REMOVED\n");
         exit(0);
     }
@@ -55,23 +59,42 @@ void subserver_logic(int client_socket){
 
     // Gets the client's command
     char input[BUFFER_SIZE];
-    read(client_socket,input,sizeof(input));
+    read(client_socket, input, sizeof(input));
 
     if (strcmp(input,"post")==0) {
         read(client_socket, input, sizeof(input));
         printf("Input received: %s\n",input);
+
+        //shared data
         int *data;
         int shmid;
         shmid = shmget(KEY, sizeof(int), 0640);
         data = shmat(shmid, 0, 0); //attach
         int i = *data + 1;
         *data = *data + 1;
+
+        int *posts;
+        int shmid02;
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        posts = shmat(shmid02, 0, 0);
+
         char new_input[BUFFER_SIZE+10];
         sprintf(new_input, "p%d: %s",i,input);
-//        printf("%ld\n",strlen(new_input));
+        // printf("%ld\n",strlen(new_input));
         write(forum, new_input, strlen(new_input));
         printf("%s", new_input);
+
+        char post_name[BUFFER_SIZE];
+        sprintf(post_name, "p%d", i);
+        printf("Post %s created\n", post_name);
+        int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
+        write(post, new_input, strlen(new_input));
+        posts[i-1] = post;
+
+        close(forum);
+        close(post);
         shmdt(data); //detach
+        shmdt(posts); //detach
     } 
     
     else if(strcmp(input,"reply")==0) {
@@ -83,12 +106,12 @@ void subserver_logic(int client_socket){
 }
 
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 
 int main(int argc, char *argv[] ) {
@@ -125,12 +148,17 @@ int main(int argc, char *argv[] ) {
     data = shmat(shmid, 0, 0); //attach
 //    printf("*data: %d\n", *data);
     char line[BUFFER_SIZE];
-   
+    
+    int *posts;
+    int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    posts = (int *)shmat(shmid02, 0, 0); //attaching
+
     while (fgets(line,sizeof(line),forum1)) {
         if (line[0]=='p') *data = *data + 1;
     }
 //    printf("*data: %d\n", *data);
     shmdt(data); //detach
+    shmdt(posts); //detach
     signal(SIGINT,sighandler);
 
     while(1){

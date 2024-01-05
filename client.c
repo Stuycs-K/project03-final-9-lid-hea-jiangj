@@ -2,9 +2,9 @@
 
 void clientLogic(int server_socket){
 //    while(1){
-        // Prompts the user for a string.
-        char input[BUFFER_SIZE];
-        read(server_socket, input, sizeof(input));
+    // Prompts the user for a string.
+    char input[BUFFER_SIZE];
+    read(server_socket, input, sizeof(input));
         printf("%s", input);
         
         printf("Input a command (post or reply): ");
@@ -15,18 +15,18 @@ void clientLogic(int server_socket){
     //    printf("If statement about to run\n");
         if (strcmp(input,"post")==0) {
             printf("Enter your post: ");
-            fgets(input, sizeof(input), stdin);
-    //        printf("fgets: %s\n",input);
-            // Send the user input to the client.
-            write(server_socket, input, sizeof(input));
+    fgets(input, sizeof(input), stdin);
+//        printf("fgets: %s\n",input);
+    // Send the user input to the client.
+    write(server_socket, input, sizeof(input));
 
-            // Read the modified string from the server
+    // Read the modified string from the server
     //        read(server_socket, input, sizeof(input));
 
 
-            // Prints the modified string
+    // Prints the modified string
     //        printf("%s", input);
-        }
+}
         else if (strcmp(input,"reply")==0) {
             printf("Reply isn't working rn!\n");
         }
@@ -61,9 +61,13 @@ int main(int argc, char *argv[] ) {
 
     //displaying the forum
     int server_socket = client_tcp_handshake(IP);
-//    printf("client connected.\n");
+    //    printf("client connected.\n");
     clientLogic(server_socket);
 
+    int *posts;
+    int shmid02;
+    shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    posts = shmat(shmid02, 0, 0);
 
     //downing semaphore
     sb.sem_op = 1;
