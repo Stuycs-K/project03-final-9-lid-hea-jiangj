@@ -23,4 +23,5 @@ client: compile
 
 clean:
 	rm *.o
-	rm *~
+	rm client
+	rm server
