@@ -1,7 +1,7 @@
 #include "networking.h"
 
 void clientLogic(int server_socket){
-    while(1){
+//    while(1){
         // Prompts the user for a string.
         char input[BUFFER_SIZE];
         read(server_socket, input, sizeof(input));
@@ -33,7 +33,7 @@ void clientLogic(int server_socket){
         else {
             printf("Not a valid command!\n");
         }
-    }
+//    }
 }
 
 
@@ -42,36 +42,34 @@ int main(int argc, char *argv[] ) {
     if(argc>1){
         IP=argv[1];
     }
-    // accessing semaphore
-    // printf("Waiting for server... This may take a moment\n");
-    // int semd;
-    // int *data;
-    // semd = semget(KEY, 1, 0);
-    // if(semd == -1){
-    //     printf("error %d: %s\n", errno, strerror(errno));
-    //     printf("Semaphore Does Not Yet Exist\n");
-    //     exit(1);
-    // }
-    // // uping semaphore
-    // struct sembuf sb;
-    // sb.sem_num = 0;
-    // sb.sem_flg = SEM_UNDO;
-    // sb.sem_op = -1;
-    // semop(semd, &sb, 1);
+    //accessing semaphore
+    printf("Waiting for server... This may take a moment\n");
+    int semd;
+    int *data;
+    semd = semget(KEY, 1, 0);
+    if(semd == -1){
+        printf("error %d: %s\n", errno, strerror(errno));
+        printf("Semaphore Does Not Yet Exist\n");
+        exit(1);
+    }
+    // uping semaphore
+    struct sembuf sb;
+    sb.sem_num = 0;
+    sb.sem_flg = SEM_UNDO;
+    sb.sem_op = -1;
+    semop(semd, &sb, 1);
 
     //displaying the forum
-    
-
     int server_socket = client_tcp_handshake(IP);
 //    printf("client connected.\n");
     clientLogic(server_socket);
 
 
-    // downing semaphore
-    // sb.sem_op = 1;
-    // semop(semd, &sb, 1);
-    // while(1){
-    //     clientLogic(server_socket);
-    // }
+    //downing semaphore
+    sb.sem_op = 1;
+    semop(semd, &sb, 1);
+    while(1){
+        clientLogic(server_socket);
+    }
 }
 
