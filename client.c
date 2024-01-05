@@ -40,11 +40,14 @@ int main(int argc, char *argv[] ) {
     sb.sem_op = -1;
     semop(semd, &sb, 1);
 
-
     int server_socket = client_tcp_handshake(IP);
     printf("client connected.\n");
     clientLogic(server_socket);
 
+    int *posts;
+    int shmid02;
+    shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    posts = shmat(shmid02, 0, 0);
 
     // downing semaphore
     sb.sem_op = 1;
