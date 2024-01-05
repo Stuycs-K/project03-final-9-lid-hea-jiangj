@@ -30,6 +30,14 @@ static void sighandler( int signo ) {
     }
 }
 
+// void sort_forum(int forum){
+//     int alphabetical = open("alphabetical.txt",O_WRONLY | O_APPEND);
+//     // Listens for a string (use the buffer size)
+//     char line[BUFFER_SIZE];
+//     fgets(line, sizeof(line), forum*);
+//     printf("%s",line);
+// }
+
 
 void subserver_logic(int client_socket){
     int forum = open("forum.txt",O_WRONLY | O_APPEND);
@@ -50,16 +58,16 @@ void subserver_logic(int client_socket){
     printf("%s", new_input);
     write(client_socket, new_input, strlen(new_input));
     shmdt(data); //detach
- 
+    sort_forum(forum);
 }
 
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 
 int main(int argc, char *argv[] ) {
@@ -69,7 +77,7 @@ int main(int argc, char *argv[] ) {
     int numStrings = 0;
 
 
-    // semaphore
+//    semaphore
     int semd;
     int set;
     semd = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
@@ -88,7 +96,7 @@ int main(int argc, char *argv[] ) {
     }
 
 
-    //shared memory
+//    shared memory
     int *data;
     int shmid;
     shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);

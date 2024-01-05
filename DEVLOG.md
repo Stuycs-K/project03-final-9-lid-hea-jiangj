@@ -13,6 +13,9 @@ HW: worked on proposal file with the idea of a reddit-like question forum
 CW: discussed logistics of terminal displaying all the posts. also discussed how to keep updating clients with all the most recent posts
 HW: made the base server, client, and makefile. established basic communication between client and server. server can now take input from client and place into a file.
 
+### 2024-01-05 - Brief description
+CW: sorted out server and client communication stuff. started working on forum reading and sorting alphabetically. 
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
