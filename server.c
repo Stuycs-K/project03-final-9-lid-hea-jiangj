@@ -51,11 +51,38 @@ void subserver_logic(int client_socket){
   
 }
 
+union semun { 
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
+
 int main(int argc, char *argv[] ) { 
     int forum = open("forum.txt",O_RDONLY);
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup(); 
     int numStrings = 0;
+
+    //semaphore
+    int semd;
+    int set;
+    semd = semget(KEY, 1, IPC_CREAT | IPC_EXCL | 0644);
+    if (semd == -1) {
+        printf("errno %d: %s\n", errno, strerror(errno));
+        semd = semget(KEY, 1, 0);
+        set = semctl(semd, 0, GETVAL, 0);
+        printf("Semctl Returned: %d\n", set);
+        exit(1);
+    }
+    else{
+        union semun file;
+        file.val = 1;
+        set = semctl(semd, 0, SETVAL, file);
+        printf("Semctl Returned: %d\n", set);
+    }
+
+    //shared memory
     int *data;
     int shmid;
     shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
