@@ -5,34 +5,34 @@ void clientLogic(int server_socket){
     // Prompts the user for a string.
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-        printf("%s", input);
+    printf("%s", input);
         
-        printf("Input a command (post or reply): ");
-        fgets(input, sizeof(input), stdin);
-        *strchr(input, '\n') = 0;
-    //    printf("About to write\n");
-        write(server_socket,input,sizeof(input));
-    //    printf("If statement about to run\n");
-        if (strcmp(input,"post")==0) {
-            printf("Enter your post: ");
+    printf("Input a command (post or reply): ");
     fgets(input, sizeof(input), stdin);
-//        printf("fgets: %s\n",input);
-    // Send the user input to the client.
-    write(server_socket, input, sizeof(input));
+    *strchr(input, '\n') = 0;
+    // printf("About to write\n");
+    write(server_socket,input,sizeof(input));
+    // printf("If statement about to run\n");
+    if (strcmp(input,"post")==0) {
+        printf("Enter your post: ");
+        fgets(input, sizeof(input), stdin);
+        // printf("fgets: %s\n",input);
+        // Send the user input to the client.
+        write(server_socket, input, sizeof(input));
 
     // Read the modified string from the server
-    //        read(server_socket, input, sizeof(input));
+    // read(server_socket, input, sizeof(input));
 
 
     // Prints the modified string
     //        printf("%s", input);
-}
-        else if (strcmp(input,"reply")==0) {
-            printf("Reply isn't working rn!\n");
-        }
-        else {
-            printf("Not a valid command!\n");
-        }
+    }
+    else if (strcmp(input,"reply")==0) {
+        printf("Reply isn't working rn!\n");
+    }
+    else {
+        printf("Not a valid command!\n");
+    }
 //    }
 }
 

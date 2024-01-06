@@ -5,7 +5,7 @@
 ### 2024-01-02 - Brief description
 CW/HW: found group members and started thinking of ideas
 
-### 2024-01-03 - Brief description
+### 202s4-01-03 - Brief description
 CW: brainstormed ideas (battleship, monopoly, reddit)and checked with Mr. K
 HW: worked on proposal file with the idea of a reddit-like question forum
 
@@ -29,6 +29,10 @@ HW: worked on technical details in proposal file and discussed work division and
 ### 2024-01-04 - Brief description
 CW: decided on logistics of the program. discussed whether to use a single large file for data storage or multiple smaller files for each post made (still ongoing). decided on server-client based program using sockets for networking and implemented during class.
 HW: established semaphore access. creates shared memory and semaphore on the server side. ups and downs the semaphore on client side to prevent mutliple users from modifying the forum file at the same time. modified sighandler to remove semaphore after kill signal based on a recognizable key.
+
+### 2024-01-05 - Brief description
+CW: discussed with group the logistics of how each post and their content would be sorted. decided on creating a seperate text file for each post and their content. started working on shared memory of array that will contain the file descriptors for the posts
+HW: continued working on shared memory of int array. successfully created and populated (needs more testing). began working on opening files for each post and implementing an edit feature that would allow client users to edit the content inside each post
 
 ## Player 3: Jack Jiang
 
