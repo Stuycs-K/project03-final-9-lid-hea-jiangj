@@ -29,6 +29,9 @@ void clientLogic(int server_socket){
     }
     else if (strcmp(input,"reply")==0) {
         printf("Reply isn't working rn!\n");
+        // printf("Insert a post to view (p#): ");
+        // fgets(input, sizeof(input), stdin);
+        // write(server_socket, input, sizeof(input));
     }
     else {
         printf("Not a valid command!\n");
@@ -38,7 +41,7 @@ void clientLogic(int server_socket){
 
 
 int main(int argc, char *argv[] ) {
-    char* IP = "127.0.0.1";
+    char* IP = NULL;
     if(argc>1){
         IP=argv[1];
     }
@@ -72,8 +75,8 @@ int main(int argc, char *argv[] ) {
     //downing semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
-    while(1){
-        clientLogic(server_socket);
-    }
+    // while(1){
+    //     clientLogic(server_socket);
+    // }
 }
 

@@ -12,6 +12,30 @@
 //     }
 // }
 
+char* file_to_string(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("fopen failure");
+        exit(1);
+    }
+
+    char* accum = malloc(1); 
+    char line[BUFFER_SIZE]; 
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
+        if (new_content == NULL) {
+            perror("realloc error");
+            exit(1);
+        }
+
+        accum = new_content;
+        strcat(accum, line);
+    }
+
+    fclose(file);
+    return accum;
+}
 
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
@@ -47,13 +71,14 @@ void subserver_logic(int client_socket){
     int forum = open("forum.txt",O_WRONLY | O_APPEND);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
-    char accum[BUFFER_SIZE] = "";
-    char line[BUFFER_SIZE];
-    while (fgets(line,BUFFER_SIZE,forum2)) {
-        strcat(accum,line);
-        strcat(accum,"---------------------------------\n");
-    }
-    accum[strlen(accum)] = '\0';
+//     char accum[BUFFER_SIZE] = "";
+//     char line[BUFFER_SIZE];
+//     while (fgets(line,BUFFER_SIZE,forum2)) {
+//         strcat(accum,line);
+// //        strcat(accum,"---------------------------------\n");
+//     }
+//     accum[strlen(accum)] = '\0';
+    char* accum = file_to_string("forum.txt");
     write(client_socket, accum, strlen(accum));
 //    printf("Accum: %s\n",accum);
 
@@ -83,7 +108,6 @@ void subserver_logic(int client_socket){
         // printf("%ld\n",strlen(new_input));
         write(forum, new_input, strlen(new_input));
         printf("%s", new_input);
-
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
@@ -106,21 +130,21 @@ void subserver_logic(int client_socket){
 }
 
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 
 int main(int argc, char *argv[] ) {
     printf("server online\n");
     int forum = open("forum.txt",O_RDONLY);
+//    printf("%s", file_to_string("forum.txt"));
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
     int numStrings = 0;
-
 
 //    semaphore
     int semd;

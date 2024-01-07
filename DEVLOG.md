@@ -15,7 +15,7 @@ HW: made the base server, client, and makefile. established basic communication 
 
 ### 2024-01-05 - Brief description
 CW: sorted out server and client communication stuff. started working on forum reading and sorting alphabetically. 
-HW: cleaned up code and got server to send post menu to the client instantly
+HW: cleaned up code and got server to send post menu to the client instantly, started working on replies, made a file_to_string method for faster communication from server to client
 
 ## Player 2: Derek Li
 
