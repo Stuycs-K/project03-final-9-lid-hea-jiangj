@@ -34,6 +34,9 @@ HW: established semaphore access. creates shared memory and semaphore on the ser
 CW: discussed with group the logistics of how each post and their content would be sorted. decided on creating a seperate text file for each post and their content. started working on shared memory of array that will contain the file descriptors for the posts
 HW: continued working on shared memory of int array. successfully created and populated (needs more testing). began working on opening files for each post and implementing an edit feature that would allow client users to edit the content inside each post
 
+### 2024-01-7 - Brief description
+WORK: worked on functions that allows the client user to read and edit the individual post files that they create. succesfully got edit and read to function but encountered an issue regarding the file not terminating at null and displaying old data (looking into). planning on implementing user permission using shared memory once debugging is completed.
+
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description

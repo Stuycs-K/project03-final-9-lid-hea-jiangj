@@ -12,31 +12,6 @@
 //     }
 // }
 
-char* file_to_string(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("fopen failure");
-        exit(1);
-    }
-
-    char* accum = malloc(1); 
-    char line[BUFFER_SIZE]; 
-
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-        if (new_content == NULL) {
-            perror("realloc error");
-            exit(1);
-        }
-
-        accum = new_content;
-        strcat(accum, line);
-    }
-
-    fclose(file);
-    return accum;
-}
-
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
         //removing semaphore
@@ -104,7 +79,7 @@ void subserver_logic(int client_socket){
         posts = shmat(shmid02, 0, 0);
 
         char new_input[BUFFER_SIZE+10];
-        sprintf(new_input, "p%d: %s",i,input);
+        sprintf(new_input, "p%d: %s", i ,input);
         // printf("%ld\n",strlen(new_input));
         write(forum, new_input, strlen(new_input));
         printf("%s", new_input);
@@ -113,7 +88,7 @@ void subserver_logic(int client_socket){
         printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
         write(post, new_input, strlen(new_input));
-        posts[i-1] = post;
+        posts[i-1] = i;
 
         close(forum);
         close(post);
@@ -129,14 +104,12 @@ void subserver_logic(int client_socket){
     }
 }
 
-
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
-
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     printf("server online\n");

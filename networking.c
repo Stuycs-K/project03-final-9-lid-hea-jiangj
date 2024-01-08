@@ -94,3 +94,28 @@ void err(int i, char*message){
   	exit(1);
   }
 }
+
+char* file_to_string(const char* filename) {
+    FILE* file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("fopen failure");
+        exit(1);
+    }
+
+    char* accum = malloc(1); 
+    char line[BUFFER_SIZE]; 
+
+    while (fgets(line, sizeof(line), file) != NULL) {
+        char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
+        if (new_content == NULL) {
+            perror("realloc error");
+            exit(1);
+        }
+
+        accum = new_content;
+        strcat(accum, line);
+    }
+
+    fclose(file);
+    return accum;
+}
