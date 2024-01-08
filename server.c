@@ -87,14 +87,23 @@ void subserver_logic(int client_socket){
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
-        write(post, new_input, strlen(new_input));
+        write(post, new_input, strlen(new_input));        
         posts[i-1] = i;
+
+        // sends back the updated forum
 
         close(forum);
         close(post);
         shmdt(data); //detach
         shmdt(posts); //detach
     } 
+    else if(strcmp(input, "view") == 0){
+        read(client_socket, input, sizeof(input));
+        if (strlen(input) <= 3){
+            char* post = file_to_string(input);
+            write(client_socket, post, strlen(post));
+        }
+    }
     
     else if(strcmp(input,"reply")==0) {
         printf("Still working on this!\n");
@@ -104,12 +113,12 @@ void subserver_logic(int client_socket){
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
     printf("server online\n");

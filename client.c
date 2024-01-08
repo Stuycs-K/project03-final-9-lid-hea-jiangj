@@ -7,7 +7,7 @@ void clientLogic(int server_socket){
     read(server_socket, input, sizeof(input));
     printf("%s", input);
         
-    printf("Input a command (post, read, reply, edit): ");
+    printf("Input a command (post, view, reply, edit): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -20,12 +20,6 @@ void clientLogic(int server_socket){
         // Send the user input to the client.
         write(server_socket, input, sizeof(input));
 
-    // Read the modified string from the server
-    // read(server_socket, input, sizeof(input));
-
-
-    // Prints the modified string
-    //        printf("%s", input);
     }
     else if (strcmp(input,"reply")==0) {
         printf("Reply isn't working rn!\n");
@@ -33,17 +27,20 @@ void clientLogic(int server_socket){
         // fgets(input, sizeof(input), stdin);
         // write(server_socket, input, sizeof(input));
     }
-    else if(strcmp(input, "read") == 0){
-        printf("Which post would you like to edit?(# only): ");
+    else if(strcmp(input, "view") == 0){
+        printf("which post would you like to view?(# only): ");
         fgets(input, sizeof(input), stdin);
         char post_name[BUFFER_SIZE];
         int num;
         sscanf(input, "%d", &num);
         sprintf(post_name, "p%d", num);
-        int post = open(post_name, O_RDONLY, 0);
-        char* content = file_to_string(post_name);
-        printf("Current content %s: \n%s", post_name, content);
-        close(post);
+        write(server_socket, post_name, sizeof(post_name));
+        // int post = open(post_name, O_RDONLY, 0);
+        // char* content = file_to_string(post_name);
+        char content[BUFFER_SIZE];
+        read(server_socket, content, sizeof(content));
+        printf("Current content of %s: \n%s\n", post_name, content);
+//        close(post);
     }
     else if(strcmp(input, "edit") == 0){
         printf("Which post would you like to edit?(# only): ");
