@@ -170,6 +170,18 @@ int main(int argc, char *argv[] ) {
 
     //displaying the forum
     int server_socket = client_tcp_handshake(IP);
+    FILE* forum1 = fopen("forum.txt","r");
+    shmid = shmget(KEY, sizeof(int), 0640);
+    data = shmat(shmid, 0, 0); //attach
+    while (fgets(line,sizeof(line),forum1)) {
+        if (line[0]=='p') *data = *data + 1;
+    }
+
+    int NUM_LINES = 5;
+    int line_nums[NUM_LINES];
+    for (int i = 0;i<NUM_LINES;i++) {
+        
+    }
 
     int *posts;
     int shmid02;
