@@ -62,7 +62,9 @@ void subserver_logic(int client_socket){
     read(client_socket, input, sizeof(input));
 
     if (strcmp(input,"post")==0) {
+        char content[BUFFER_SIZE];
         read(client_socket, input, sizeof(input));
+        read(client_socket, content, sizeof(content));
         printf("Input received: %s\n",input);
 
         //shared data
@@ -87,7 +89,10 @@ void subserver_logic(int client_socket){
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
-        write(post, new_input, strlen(new_input));        
+        write(post, new_input, strlen(new_input));
+        char post_content[BUFFER_SIZE+10];
+        sprintf(post_content, "p%d: %s", i, content);
+        write(post, post_content, strlen(post_content));
         posts[i-1] = i;
 
         // sends back the updated forum
@@ -162,7 +167,7 @@ int main(int argc, char *argv[] ) {
     while (fgets(line,sizeof(line),forum1)) {
         if (line[0]=='p') *data = *data + 1;
     }
-//    printf("*data: %d\n", *data);
+    printf("*data: %d\n", *data);
     shmdt(data); //detach
     shmdt(posts); //detach
     signal(SIGINT,sighandler);
