@@ -14,12 +14,15 @@ void clientLogic(int server_socket){
     write(server_socket,input,sizeof(input));
     // printf("If statement about to run\n");
     if (strcmp(input,"post")==0) {
-        printf("Enter your post: ");
+        char content[BUFFER_SIZE];
+        printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
+        printf("Enter the content of your post: ");
+        fgets(content,sizeof(content),stdin);
         // printf("fgets: %s\n",input);
         // Send the user input to the client.
         write(server_socket, input, sizeof(input));
-
+        write(server_socket, content, sizeof(content));
     // Read the modified string from the server
     // read(server_socket, input, sizeof(input));
 
@@ -167,13 +170,15 @@ int main(int argc, char *argv[] ) {
 
     //displaying the forum
     int server_socket = client_tcp_handshake(IP);
-    //    printf("client connected.\n");
-    clientLogic(server_socket);
 
     int *posts;
     int shmid02;
     shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
     posts = shmat(shmid02, 0, 0);
+    printf("posts: %d\n",*posts);
+
+    clientLogic(server_socket);
+
 
     //downing semaphore
     // sb.sem_op = 1;
