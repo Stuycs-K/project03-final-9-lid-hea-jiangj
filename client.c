@@ -7,7 +7,7 @@ void clientLogic(int server_socket){
     read(server_socket, input, sizeof(input));
     printf("%s", input);
         
-    printf("Input a command (post, view, reply, edit): ");
+    printf("Input a command (post, view, edit): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -30,26 +30,32 @@ void clientLogic(int server_socket){
     // Prints the modified string
     //        printf("%s", input);
     }
-    else if (strcmp(input,"reply")==0) {
-        printf("Reply isn't working rn!\n");
-        // printf("Insert a post to view (p#): ");
-        // fgets(input, sizeof(input), stdin);
-        // write(server_socket, input, sizeof(input));
-    }
-    else if(strcmp(input, "view") == 0){
-        printf("which post would you like to view?(# only): ");
+    else if (strcmp(input, "view") == 0) {
+        printf("Which post would you like to view? (# only): ");
         fgets(input, sizeof(input), stdin);
-        char post_name[BUFFER_SIZE];
         int num;
         sscanf(input, "%d", &num);
+        char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
-        // int post = open(post_name, O_RDONLY, 0);
-        // char* content = file_to_string(post_name);
+
         char content[BUFFER_SIZE];
         read(server_socket, content, sizeof(content));
         printf("Current content of %s: \n%s\n", post_name, content);
-//        close(post);
+
+        // Prompt for reply
+        printf("Input a command (reply, back): ");
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';  // Remove newline character
+        write(server_socket, input, sizeof(input));
+
+        if (strcmp(input, "reply") == 0) {
+            printf("Input a reply: ");
+            fgets(input, sizeof(input), stdin);
+            input[strcspn(input, "\n")] = '\0';  // Remove newline character
+            write(server_socket, input, sizeof(input));
+        }
+
     }
     else if(strcmp(input, "edit") == 0){
         printf("Which post would you like to edit?(# only): ");

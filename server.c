@@ -55,6 +55,8 @@ void subserver_logic(int client_socket){
 //     accum[strlen(accum)] = '\0';
     char* accum = file_to_string("forum.txt");
     write(client_socket, accum, strlen(accum));
+    fflush(stdin);
+
 //    printf("Accum: %s\n",accum);
 
     // Gets the client's command
@@ -91,7 +93,7 @@ void subserver_logic(int client_socket){
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
         write(post, new_input, strlen(new_input));
         char post_content[BUFFER_SIZE+10];
-        sprintf(post_content, "p%d: %s", i, content);
+        sprintf(post_content, "Content: %s", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = i;
 
@@ -105,8 +107,29 @@ void subserver_logic(int client_socket){
     else if(strcmp(input, "view") == 0){
         read(client_socket, input, sizeof(input));
         if (strlen(input) <= 3){
-            char* post = file_to_string(input);
-            write(client_socket, post, strlen(post));
+            char* post_name = input;
+            int post = open(post_name, O_WRONLY | O_APPEND, 0666);
+            char* post_content = file_to_string(post_name);
+            write(client_socket, post_content, strlen(post_content));
+            read(client_socket, input, sizeof(input));
+            if (strcmp(input, "reply") == 0){
+                char reply[BUFFER_SIZE] = "- ";
+                read(client_socket, input, sizeof(input));
+                strcat(reply,input);
+                strcat(reply,"\n");
+                write(post, reply, strlen(reply));
+            }
+            else if (strcmp(input, "back") == 0){
+
+            }
+            else {
+                char invalid[BUFFER_SIZE] = "Invalid Command";
+                write(client_socket, invalid, sizeof(invalid));
+            }
+        }
+        else{
+            char invalid[BUFFER_SIZE] = "Invalid Post";
+            write(client_socket, invalid, sizeof(invalid));
         }
     }
     
