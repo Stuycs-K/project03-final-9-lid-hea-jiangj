@@ -4,6 +4,11 @@
 void clientLogic(int server_socket){
 //    while(1){
     // Prompts the user for a string.
+    char pid_str[BUFFER_SIZE];
+    int pid_int = getpid();
+    sprintf(pid_str, "%d", pid_int);
+    write(server_socket, pid_str, sizeof(pid_str));
+    
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
         
@@ -15,10 +20,10 @@ void clientLogic(int server_socket){
     // printf("If statement about to run\n");
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
-        char pid_str[BUFFER_SIZE];
-        int pid_int = getpid();
+        // char pid_str[BUFFER_SIZE];
+        // int pid_int = getpid();
         printf("pid: %d\n", pid_int);
-        sprintf(pid_str, "%d", pid_int);
+        // sprintf(pid_str, "%d", pid_int);
         printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
         printf("Enter the content of your post: ");
@@ -193,60 +198,60 @@ int main(int argc, char *argv[] ) {
     // semop(semd, &sb, 1);
 
     while(1){
-    //displaying the forum
-    char line[BUFFER_SIZE];
-    int server_socket = client_tcp_handshake(IP);
-    int shmid = shmget(KEY, sizeof(int), 0640);
-    int* data = shmat(shmid, 0, 0); //attach
+        //displaying the forum
+        char line[BUFFER_SIZE];
+        int server_socket = client_tcp_handshake(IP);
+        int shmid = shmget(KEY, sizeof(int), 0640);
+        int* data = shmat(shmid, 0, 0); //attach
 
-    char lines[5][BUFFER_SIZE];
-    int NUM_LINES = 5;
-    int line_nums[NUM_LINES];
-    char buffer[MAX_LINE_LENGTH];
-    long filePos;
-    int lineCount = 0, targetLine = 5;
+        char lines[5][BUFFER_SIZE];
+        int NUM_LINES = 5;
+        int line_nums[NUM_LINES];
+        char buffer[MAX_LINE_LENGTH];
+        long filePos;
+        int lineCount = 0, targetLine = 5;
 
-    FILE* forum1 = fopen("forum.txt","r");
-    if (forum1 == NULL) {
-        perror("Error opening file");
-        return 1;
-    }
-
-    // Seek to the end of the file
-    fseek(forum1, 0, SEEK_END);
-    filePos = ftell(forum1);
-
-    // Move backwards through the file to find the 5th last newline
-    while (lineCount < targetLine && filePos >= 0) {
-        fseek(forum1, --filePos, SEEK_SET);
-        if (fgetc(forum1) == '\n') {
-            lineCount++;
+        FILE* forum1 = fopen("forum.txt","r");
+        if (forum1 == NULL) {
+            perror("Error opening file");
+            return 1;
         }
-    }
 
-    // Read and print the last 5 lines
-    if (lineCount < targetLine) {
-        // The file has less than 5 lines, so go to the start
-        fseek(forum1, 0, SEEK_SET);
-    } else {
-        // Go to the start of the line
-        fseek(forum1, filePos + 1, SEEK_SET);
-    }
+        // Seek to the end of the file
+        fseek(forum1, 0, SEEK_END);
+        filePos = ftell(forum1);
 
-    for (int i = 0;i<lineCount;i++) {
-        if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-            printf("%s",lines[i]);
+        // Move backwards through the file to find the 5th last newline
+        while (lineCount < targetLine && filePos >= 0) {
+            fseek(forum1, --filePos, SEEK_SET);
+            if (fgetc(forum1) == '\n') {
+                lineCount++;
+            }
         }
-    }
-    fclose(forum1);
 
-    // int *posts;
-    // int shmid02;
-    // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-    // posts = shmat(shmid02, 0, 0);
-    // printf("posts: %d\n",*posts);
-    
-        clientLogic(server_socket);
+        // Read and print the last 5 lines
+        if (lineCount < targetLine) {
+            // The file has less than 5 lines, so go to the start
+            fseek(forum1, 0, SEEK_SET);
+        } else {
+            // Go to the start of the line
+            fseek(forum1, filePos + 1, SEEK_SET);
+        }
+
+        for (int i = 0;i<lineCount;i++) {
+            if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+                printf("%s",lines[i]);
+            }
+        }
+        fclose(forum1);
+
+        // int *posts;
+        // int shmid02;
+        // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        // posts = shmat(shmid02, 0, 0);
+        // printf("posts: %d\n",*posts);
+        
+            clientLogic(server_socket);
     }
 
     // int *posts;
