@@ -6,7 +6,7 @@ p5: testing semaphore 123
 p6: testing semaphore 321
 p7: testing sema 123
 p8: testing sema 432
-p9: post number 5230 or something                                                                                   
+p9: post number 5230 or something 
 p10: new post hooray
 p11: horray post yes
 p12: hooray
@@ -19,4 +19,6 @@ p18: testing post editing
 p19: testing editing 123
 p20: The best sandwich
 p21: Which subject is the worst?
-p22: What ice cream flavor is the best?
+p22: post number 22
+p23: post 1
+p24: postp 24
