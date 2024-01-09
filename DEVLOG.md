@@ -59,6 +59,11 @@ CW: brainstormed logistics of project. Decided on multiple file system, where ea
 
 HW: Worked on adding posts to forum.txt so that each post would have p(n) where n is a number based on the number of that post. So the first post in forum.txt would have p1, the second would have p2 and so on. I used shared memory to store the number of questions in forum.txt by first looping through forum.txt and saving it, and then using that memory to decide what number to put before a post. I used signals to delete the shared memory once you exited the server/session. Now anything the user types in is prefaced by p<post #>. 
 
+### 2024-01-05 - Brief description
+CW: Worked on displaying the last 3 lines from the forum in client. Cleaned up garbage strings that came along with posts.
+
+HW: Edited semaphores and memory to account for number of posts and worked on controlling user acces when two users make a post at the same time.
+
 ### 2024-01-7 - Brief description
 HW: Editing feature now allows users to replace specific posts based on number inputted. It replaces the post in forum.txt and the post file created. I did this creating a temp.txt file and renaming it. I will try to work on displaying the forum posts to the client to make it look better.
 
@@ -67,3 +72,8 @@ HW: Editing feature now allows users to replace specific posts based on number i
 CW: Changed editing feature so that it you can edit the title and content of a post separately. Forum asks user if they want to change title or content. Worked on getting data from posts.
 
 HW: Worked on displaying forum in the terminal to the client side. The terminal displays the last 4 post titles to the client. If the a new post is updated, the forum shown to the client is updated. Will work on implementing scrolling with the up and down key.
+
+### 2024-01-9 - Brief description
+CW: Worked on implementing ncurses. Installed ncurses on my local machine. Started working on checking up and down arrows.
+
+HW: 

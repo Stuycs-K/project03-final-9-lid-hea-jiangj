@@ -171,6 +171,14 @@ void clientLogic(int server_socket){
 
 
 int main(int argc, char *argv[] ) {
+    keypad(stdstr, TRUE);
+    int ch = getch();
+    if (ch == KEY_UP) {
+        printf("You pressed up!\n");
+    }
+    else if(ch == KEY_DOWN) {
+        printf("You pressed down!\n");
+    }
     char* IP = NULL;
     if(argc>1){
         IP=argv[1];
