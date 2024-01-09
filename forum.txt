@@ -24,3 +24,5 @@ p23: hello kitty 123
 p24: is god real
 p25: cats or dogs?
 p26: sandwich or borger
+p27: panda bear
+p28: monkey

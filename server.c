@@ -100,7 +100,6 @@ void subserver_logic(int client_socket){
         sprintf(post_content, "Content: %s", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = pid_int;
-        printf("pid: %d\n", posts[i-1]);
 
         // sends back the updated forum
 
@@ -154,38 +153,38 @@ union semun {
  };
 
 int main(int argc, char *argv[] ) {
-    printf("server online\n");
+    printf("SERVER ONLINE\n===================================================\n");
     int forum = open("forum.txt",O_RDONLY);
-//    printf("%s", file_to_string("forum.txt"));
+    // printf("%s", file_to_string("forum.txt"));
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
     int numStrings = 0;
 
-// //    semaphore
-//     int semd;
-//     int set;
-//     semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
-//     if (semd == -1) {
-//         printf("errno %d: %s\n", errno, strerror(errno));
-//         semd = semget(KEY, 1, 0);
-//         set = semctl(semd, 0, GETVAL, 0);
-// //        printf("Semctl Returned: %d\n", set);
-//         exit(1);
-//     }
-//     else{
-//         union semun file;
-//         file.val = 1;
-//         set = semctl(semd, 0, SETVAL, file);
-// //        printf("Semctl Returned: %d\n", set);
-//     }
+    // semaphore
+    int semd;
+    int set;
+    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    if (semd == -1) {
+        printf("errno %d: %s\n", errno, strerror(errno));
+        semd = semget(KEY, 1, 0);
+        set = semctl(semd, 0, GETVAL, 0);
+        // printf("Semctl Returned: %d\n", set);
+        exit(1);
+    }
+    else{
+        union semun file;
+        file.val = 1;
+        set = semctl(semd, 0, SETVAL, file);
+        // printf("Semctl Returned: %d\n", set);
+    }
 
 
-//    shared memory
+    // shared memory
     int *data;
     int shmid;
     shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
     data = shmat(shmid, 0, 0); //attach
-//    printf("*data: %d\n", *data);
+    // printf("*data: %d\n", *data);
     char line[BUFFER_SIZE];
     
     int *posts;
@@ -214,7 +213,7 @@ int main(int argc, char *argv[] ) {
             exit(0);
         }
         else {
-            printf("%d clients connected \n", numStrings);
+            printf("%d Clients Connected \n", numStrings);
             close(client_socket);
         }
     }
