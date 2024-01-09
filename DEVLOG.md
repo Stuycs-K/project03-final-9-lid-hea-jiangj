@@ -41,6 +41,10 @@ HW: continued working on shared memory of int array. successfully created and po
 ### 2024-01-7 - Brief description
 WORK: worked on functions that allows the client user to read and edit the individual post files that they create. succesfully got edit and read to function but encountered an issue regarding the file not terminating at null and displaying old data (looking into). planning on implementing user permission using shared memory once debugging is completed.
 
+### 2024-01-08 - Brief description
+CW: brainstormed what logistics would be used to establish permission for editing certain posts in our program. debated between using created a shared memory of structs that contains process pid and file number or a share memory array of ints; decided on shared memory array of int after researching and learning shared memory cannot share malloc'ed. established basic code for permission access
+HW: implemeneted constant prompting by the client to prevent pid from changing. added permissions via shared memory of an array of ints that contains the process pid for each client and checks to see whether the client process that's trying to access the post has the same pid as the one who created it
+
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description
