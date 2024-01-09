@@ -194,7 +194,7 @@ void clientLogic(int server_socket){
 
 
 int main(int argc, char *argv[] ) {
-    keypad(stdstr, TRUE);
+    keypad(stdscr, TRUE);
     int ch;
     nodelay(stdscr, TRUE);
     for (;;) {
