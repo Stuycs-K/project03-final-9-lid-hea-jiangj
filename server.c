@@ -25,7 +25,7 @@ static void sighandler( int signo ) {
         shmctl(shmid, IPC_RMID, 0);
 
         int shmid02;
-        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(struct perms), IPC_CREAT | 0640);
         shmctl(shmid02, IPC_RMID, 0);
 
         printf("SEGMENT & SHARED MEMORY REMOVED\n");
@@ -43,7 +43,7 @@ static void sighandler( int signo ) {
 
 
 void subserver_logic(int client_socket){
-    int forum = open("forum.txt",O_WRONLY | O_APPEND);
+    int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
 //     char accum[BUFFER_SIZE] = "";
@@ -65,8 +65,12 @@ void subserver_logic(int client_socket){
 
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
+        char pid_str[BUFFER_SIZE];
+        int pid_int;
         read(client_socket, input, sizeof(input));
         read(client_socket, content, sizeof(content));
+        read(client_socket, pid_str, sizeof(pid_str));
+        sscanf(pid_str, "%d", &pid_int);
         printf("Input received: %s\n",input);
 
         //shared data
@@ -78,9 +82,8 @@ void subserver_logic(int client_socket){
         *data = *data + 1;
 
         int *posts;
-        int shmid02;
-        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-        posts = shmat(shmid02, 0, 0);
+        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        posts = (int *)shmat(shmid02, 0, 0);
 
         char new_input[BUFFER_SIZE+10];
         sprintf(new_input, "p%d: %s", i ,input);
@@ -95,7 +98,8 @@ void subserver_logic(int client_socket){
         char post_content[BUFFER_SIZE+10];
         sprintf(post_content, "Content: %s", content);
         write(post, post_content, strlen(post_content));
-        posts[i-1] = i;
+        posts[i-1] = pid_int;
+        printf("pid: %d\n", posts[i-1]);
 
         // sends back the updated forum
 
@@ -141,12 +145,12 @@ void subserver_logic(int client_socket){
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     printf("server online\n");
