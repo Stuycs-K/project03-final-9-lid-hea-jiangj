@@ -72,8 +72,9 @@ void subserver_logic(int client_socket){
         //shared data
         int *data;
         int shmid;
-        shmid = shmget(KEY, sizeof(int), 0640);
+        shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
         data = shmat(shmid, 0, 0); //attach
+        printf("Data: %d\n",*data);
         int i = *data + 1;
         *data = *data + 1;
 
@@ -156,23 +157,23 @@ int main(int argc, char *argv[] ) {
     int listen_socket = server_setup();
     int numStrings = 0;
 
-//    semaphore
-    int semd;
-    int set;
-    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
-    if (semd == -1) {
-        printf("errno %d: %s\n", errno, strerror(errno));
-        semd = semget(KEY, 1, 0);
-        set = semctl(semd, 0, GETVAL, 0);
-//        printf("Semctl Returned: %d\n", set);
-        exit(1);
-    }
-    else{
-        union semun file;
-        file.val = 1;
-        set = semctl(semd, 0, SETVAL, file);
-//        printf("Semctl Returned: %d\n", set);
-    }
+// //    semaphore
+//     int semd;
+//     int set;
+//     semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+//     if (semd == -1) {
+//         printf("errno %d: %s\n", errno, strerror(errno));
+//         semd = semget(KEY, 1, 0);
+//         set = semctl(semd, 0, GETVAL, 0);
+// //        printf("Semctl Returned: %d\n", set);
+//         exit(1);
+//     }
+//     else{
+//         union semun file;
+//         file.val = 1;
+//         set = semctl(semd, 0, SETVAL, file);
+// //        printf("Semctl Returned: %d\n", set);
+//     }
 
 
 //    shared memory

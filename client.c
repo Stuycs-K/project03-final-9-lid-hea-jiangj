@@ -1,11 +1,11 @@
 #include "networking.h"
+#define MAX_LINE_LENGTH 1024
 
 void clientLogic(int server_socket){
 //    while(1){
     // Prompts the user for a string.
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-    printf("%s", input);
         
     printf("Input a command (post, view, edit): ");
     fgets(input, sizeof(input), stdin);
@@ -162,14 +162,14 @@ int main(int argc, char *argv[] ) {
     }
     //accessing semaphore
     printf("Waiting for server... This may take a moment\n");
-    int semd;
+    // int semd;
     int *data;
-    semd = semget(KEY, 1, 0);
-    if(semd == -1){
-        printf("error %d: %s\n", errno, strerror(errno));
-        printf("Semaphore Does Not Yet Exist\n");
-        exit(1);
-    }
+    // semd = semget(KEY, 1, 0);
+    // if(semd == -1){
+    //     printf("error %d: %s\n", errno, strerror(errno));
+    //     printf("Semaphore Does Not Yet Exist\n");
+    //     exit(1);
+    // }
     // uping semaphore
     // struct sembuf sb;
     // sb.sem_num = 0;
@@ -178,26 +178,57 @@ int main(int argc, char *argv[] ) {
     // semop(semd, &sb, 1);
 
     //displaying the forum
+    char line[BUFFER_SIZE];
     int server_socket = client_tcp_handshake(IP);
-    FILE* forum1 = fopen("forum.txt","r");
-    shmid = shmget(KEY, sizeof(int), 0640);
+    int shmid = shmget(KEY, sizeof(int), 0640);
     data = shmat(shmid, 0, 0); //attach
-    while (fgets(line,sizeof(line),forum1)) {
-        if (line[0]=='p') *data = *data + 1;
-    }
 
+    char lines[5][BUFFER_SIZE];
     int NUM_LINES = 5;
     int line_nums[NUM_LINES];
-    for (int i = 0;i<NUM_LINES;i++) {
-        
+    char buffer[MAX_LINE_LENGTH];
+    long filePos;
+    int lineCount = 0, targetLine = 5;
+
+    FILE* forum1 = fopen("forum.txt","r");
+    if (forum1 == NULL) {
+        perror("Error opening file");
+        return 1;
     }
 
-    int *posts;
-    int shmid02;
-    shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-    posts = shmat(shmid02, 0, 0);
-    printf("posts: %d\n",*posts);
+    // Seek to the end of the file
+    fseek(forum1, 0, SEEK_END);
+    filePos = ftell(forum1);
 
+    // Move backwards through the file to find the 5th last newline
+    while (lineCount < targetLine && filePos >= 0) {
+        fseek(forum1, --filePos, SEEK_SET);
+        if (fgetc(forum1) == '\n') {
+            lineCount++;
+        }
+    }
+
+    // Read and print the last 5 lines
+    if (lineCount < targetLine) {
+        // The file has less than 5 lines, so go to the start
+        fseek(forum1, 0, SEEK_SET);
+    } else {
+        // Go to the start of the line
+        fseek(forum1, filePos + 1, SEEK_SET);
+    }
+
+    for (int i = 0;i<lineCount;i++) {
+        if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+            printf("%s",lines[i]);
+        }
+    }
+    fclose(forum1);
+
+    // int *posts;
+    // int shmid02;
+    // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    // posts = shmat(shmid02, 0, 0);
+    // printf("posts: %d\n",*posts);
     clientLogic(server_socket);
 
 
