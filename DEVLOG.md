@@ -13,13 +13,17 @@ HW: worked on proposal file with the idea of a reddit-like question forum
 CW: discussed logistics of terminal displaying all the posts. also discussed how to keep updating clients with all the most recent posts
 HW: made the base server, client, and makefile. established basic communication between client and server. server can now take input from client and place into a file.
 
-### 2024-01-05 - Brief description
+### 2024-01-05 to 07 - Brief description
 CW: sorted out server and client communication stuff. started working on forum reading and sorting alphabetically. 
 HW: cleaned up code and got server to send post menu to the client instantly, started working on replies, made a file_to_string method for faster communication from server to client
 
 ### 2024-01-08 - Brief description
 CW: moved view and post protocols into server, clients only have ask and get a string back nothing inbetween, started working on replies function
 HW: finished a basic reply feature to updated each post file, fixed file_to_string issues while displaying the forum page
+
+### 2024-01-09 - Brief description
+CW: fixed client print errors and command options, added nametags based on pid to each post and reply
+HW: worked on formating issues and finished name tags
 
 ## Player 2: Derek Li
 

@@ -43,6 +43,9 @@ static void sighandler( int signo ) {
 
 
 void subserver_logic(int client_socket){
+    char clientPID[BUFFER_SIZE];
+    read(client_socket, clientPID, sizeof(clientPID));
+    printf("clientPID: %s\n", clientPID);
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
@@ -95,12 +98,14 @@ void subserver_logic(int client_socket){
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
+        char post_creator[BUFFER_SIZE];
+        sprintf(post_creator, "\n[by user%s]\n", clientPID);
+        write(post, post_creator, strlen(post_creator));
         write(post, new_input, strlen(new_input));
         char post_content[BUFFER_SIZE+10];
-        sprintf(post_content, "Content: %s", content);
+        sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = pid_int;
-        printf("pid: %d\n", posts[i-1]);
 
         // sends back the updated forum
 
@@ -118,10 +123,9 @@ void subserver_logic(int client_socket){
             write(client_socket, post_content, strlen(post_content));
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
-                char reply[BUFFER_SIZE] = "- ";
+                char reply[BUFFER_SIZE];
                 read(client_socket, input, sizeof(input));
-                strcat(reply,input);
-                strcat(reply,"\n");
+                sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
             }
             else if (strcmp(input, "back") == 0){
@@ -146,46 +150,46 @@ void subserver_logic(int client_socket){
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
-    printf("server online\n");
+    printf("SERVER ONLINE\n===================================================\n");
     int forum = open("forum.txt",O_RDONLY);
-//    printf("%s", file_to_string("forum.txt"));
+    // printf("%s", file_to_string("forum.txt"));
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
     int numStrings = 0;
 
-// //    semaphore
-//     int semd;
-//     int set;
-//     semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
-//     if (semd == -1) {
-//         printf("errno %d: %s\n", errno, strerror(errno));
-//         semd = semget(KEY, 1, 0);
-//         set = semctl(semd, 0, GETVAL, 0);
-// //        printf("Semctl Returned: %d\n", set);
-//         exit(1);
-//     }
-//     else{
-//         union semun file;
-//         file.val = 1;
-//         set = semctl(semd, 0, SETVAL, file);
-// //        printf("Semctl Returned: %d\n", set);
-//     }
+    // semaphore
+    int semd;
+    int set;
+    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    if (semd == -1) {
+        printf("errno %d: %s\n", errno, strerror(errno));
+        semd = semget(KEY, 1, 0);
+        set = semctl(semd, 0, GETVAL, 0);
+        // printf("Semctl Returned: %d\n", set);
+        exit(1);
+    }
+    else{
+        union semun file;
+        file.val = 1;
+        set = semctl(semd, 0, SETVAL, file);
+        // printf("Semctl Returned: %d\n", set);
+    }
 
 
-//    shared memory
+    // shared memory
     int *data;
     int shmid;
     shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
     data = shmat(shmid, 0, 0); //attach
-//    printf("*data: %d\n", *data);
+    // printf("*data: %d\n", *data);
     char line[BUFFER_SIZE];
     
     int *posts;
@@ -214,7 +218,7 @@ int main(int argc, char *argv[] ) {
             exit(0);
         }
         else {
-            printf("%d clients connected \n", numStrings);
+            printf("%d Clients Connected \n", numStrings);
             close(client_socket);
         }
     }

@@ -4,21 +4,41 @@
 void clientLogic(int server_socket){
 //    while(1){
     // Prompts the user for a string.
+    char pid_str[BUFFER_SIZE];
+    int pid_int = getpid();
+    sprintf(pid_str, "%d", pid_int);
+    write(server_socket, pid_str, sizeof(pid_str));
+    
+    int semd;
+    semd = semget(KEY, 1, 0);
+    if(semd == -1){
+        printf("error %d: %s\n", errno, strerror(errno));
+        printf("Semaphore Does Not Yet Exist\n");
+        exit(1);
+    }
+
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-        
+
     printf("Input a command (post, view, edit): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
     write(server_socket,input,sizeof(input));
     // printf("If statement about to run\n");
+    // uping semaphore
+//    printf("Connecting to Server... This may take a moment.\n");
+    struct sembuf sb;
+    sb.sem_num = 0;
+    sb.sem_flg = SEM_UNDO;
+    sb.sem_op = -1;
+    semop(semd, &sb, 1);
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
-        char pid_str[BUFFER_SIZE];
-        int pid_int = getpid();
+        // char pid_str[BUFFER_SIZE];
+        // int pid_int = getpid();
         printf("pid: %d\n", pid_int);
-        sprintf(pid_str, "%d", pid_int);
+        // sprintf(pid_str, "%d", pid_int);
         printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
         printf("Enter the content of your post: ");
@@ -82,7 +102,7 @@ void clientLogic(int server_socket){
         char* content = file_to_string(post_name);
         printf("Current content of %s: \n%s", post_name, content);
         close(post);
-        printf("Would you like to edit the title or content of the post: ");
+        printf("Would you like to edit the title or content of this post (title, content): ");
         char choice[BUFFER_SIZE];
         fgets(choice,sizeof(choice),stdin);
         printf("What would you like to replace it with: ");
@@ -134,7 +154,7 @@ void clientLogic(int server_socket){
             memset(buffer,0,sizeof(buffer));
             memset(replacement1,0,sizeof(replacement1));
             sprintf(replacement1,"p%d: %s",num,replacement);
-            printf("Replacment1: %s",replacement1);
+            printf("Replacment: %s",replacement1);
 
 
             currentLine = 1;
@@ -163,9 +183,12 @@ void clientLogic(int server_socket){
         }
         }
         }
-        else {
-            printf("Not a valid command!\n");
-        }
+    else {
+        printf("Not a valid command!\n");
+    }
+    //downing semaphore
+    sb.sem_op = 1;
+    semop(semd, &sb, 1);
     //    }
 }
 
@@ -183,92 +206,71 @@ int main(int argc, char *argv[] ) {
     if(argc>1){
         IP=argv[1];
     }
-    //accessing semaphore
-    // printf("Waiting for server... This may take a moment\n");
-    // int semd;
-    // int *data;
-    // semd = semget(KEY, 1, 0);
-    // if(semd == -1){
-    //     printf("error %d: %s\n", errno, strerror(errno));
-    //     printf("Semaphore Does Not Yet Exist\n");
-    //     exit(1);
-    // }
-    // uping semaphore
-    // struct sembuf sb;
-    // sb.sem_num = 0;
-    // sb.sem_flg = SEM_UNDO;
-    // sb.sem_op = -1;
-    // semop(semd, &sb, 1);
 
     while(1){
-    //displaying the forum
-    char line[BUFFER_SIZE];
-    int server_socket = client_tcp_handshake(IP);
-    int shmid = shmget(KEY, sizeof(int), 0640);
-    int* data = shmat(shmid, 0, 0); //attach
+        //displaying the forum
+        char line[BUFFER_SIZE];
+        int server_socket = client_tcp_handshake(IP);
+        int shmid = shmget(KEY, sizeof(int), 0640);
+        int* data = shmat(shmid, 0, 0); //attach
 
-    char lines[5][BUFFER_SIZE];
-    int NUM_LINES = 5;
-    int line_nums[NUM_LINES];
-    char buffer[MAX_LINE_LENGTH];
-    long filePos;
-    int lineCount = 0, targetLine = 5;
+        char lines[5][BUFFER_SIZE];
+        int NUM_LINES = 5;
+        int line_nums[NUM_LINES];
+        char buffer[MAX_LINE_LENGTH];
+        long filePos;
+        int lineCount = 0, targetLine = 5;
 
-    FILE* forum1 = fopen("forum.txt","r");
-    if (forum1 == NULL) {
-        perror("Error opening file");
-        return 1;
-    }
-
-    // Seek to the end of the file
-    fseek(forum1, 0, SEEK_END);
-    filePos = ftell(forum1);
-
-    // Move backwards through the file to find the 5th last newline
-    while (lineCount < targetLine && filePos >= 0) {
-        fseek(forum1, --filePos, SEEK_SET);
-        if (fgetc(forum1) == '\n') {
-            lineCount++;
+        FILE* forum1 = fopen("forum.txt","r");
+        if (forum1 == NULL) {
+            perror("Error opening file");
+            return 1;
         }
-    }
 
-    // Read and print the last 5 lines
-    if (lineCount < targetLine) {
-        // The file has less than 5 lines, so go to the start
-        fseek(forum1, 0, SEEK_SET);
-    } else {
-        // Go to the start of the line
-        fseek(forum1, filePos + 1, SEEK_SET);
-    }
+        // Seek to the end of the file
+        fseek(forum1, 0, SEEK_END);
+        filePos = ftell(forum1);
 
-    for (int i = 0;i<lineCount;i++) {
-        if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-            printf("%s",lines[i]);
+        // Move backwards through the file to find the 5th last newline
+        while (lineCount < targetLine && filePos >= 0) {
+            fseek(forum1, --filePos, SEEK_SET);
+            if (fgetc(forum1) == '\n') {
+                lineCount++;
+            }
         }
-    }
-    fclose(forum1);
 
-    // int *posts;
-    // int shmid02;
-    // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-    // posts = shmat(shmid02, 0, 0);
-    // printf("posts: %d\n",*posts);
-    
-        clientLogic(server_socket);
-    }
+        // Read and print the last 5 lines
+        if (lineCount < targetLine) {
+            // The file has less than 5 lines, so go to the start
+            fseek(forum1, 0, SEEK_SET);
+        } else {
+            // Go to the start of the line
+            fseek(forum1, filePos + 1, SEEK_SET);
+        }
 
-    // int *posts;
-    // int shmid02;
-    // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-    // posts = shmat(shmid02, 0, 0);
-    // printf("posts: %d\n",*posts);
+        for (int i = 0;i<lineCount;i++) {
+            if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+                printf("%s",lines[i]);
+            }
+        }
+        fclose(forum1);
 
-
-    //downing semaphore
-    // sb.sem_op = 1;
-    // semop(semd, &sb, 1);
-    // while(1){
-    //     clientLogic(server_socket);
+        // int *posts;
+        // int shmid02;
+        // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        // posts = shmat(shmid02, 0, 0);
+        // printf("posts: %d\n",*posts);
+        
+            clientLogic(server_socket);
+    // printf("MOST RECENT POSTS:\n===================================================\n");
+    // for (int i = 0;i<lineCount;i++) {
+    //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+    //         printf("%s",lines[i]);
+    //     }
     // }
+    // printf("===================================================\n");
+    // fclose(forum1);
+    // clientLogic(server_socket);
+    }
 }
 
