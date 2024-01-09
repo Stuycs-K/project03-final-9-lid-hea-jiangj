@@ -195,13 +195,23 @@ void clientLogic(int server_socket){
 
 int main(int argc, char *argv[] ) {
     keypad(stdstr, TRUE);
-    int ch = getch();
-    if (ch == KEY_UP) {
-        printf("You pressed up!\n");
-    }
-    else if(ch == KEY_DOWN) {
-        printf("You pressed down!\n");
-    }
+    int ch;
+    nodelay(stdscr, TRUE);
+    for (;;) {
+          if ((ch = getch()) == ERR) {
+              /* user hasn't responded
+               ...
+              */
+          }
+          else {
+              if (ch==KEY_DOWN) {
+                printf("Key down pressed\n");
+              }
+              else if(ch==KEY_UP) {
+                printf("Key up pressed\n");
+              }
+          }
+     }
     char* IP = NULL;
     if(argc>1){
         IP=argv[1];
