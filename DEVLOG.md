@@ -21,6 +21,10 @@ HW: cleaned up code and got server to send post menu to the client instantly, st
 CW: moved view and post protocols into server, clients only have ask and get a string back nothing inbetween, started working on replies function
 HW: finished a basic reply feature to updated each post file, fixed file_to_string issues while displaying the forum page
 
+### 2024-01-09 - Brief description
+CW: fixed client print errors and command options, added nametags based on pid to each post and reply
+HW: worked on formating issues and finished name tags
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
