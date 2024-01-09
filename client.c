@@ -15,6 +15,10 @@ void clientLogic(int server_socket){
     // printf("If statement about to run\n");
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
+        char pid_str[BUFFER_SIZE];
+        int pid_int = getpid();
+        printf("pid: %d\n", pid_int);
+        sprintf(pid_str, "%d", pid_int);
         printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
         printf("Enter the content of your post: ");
@@ -23,6 +27,7 @@ void clientLogic(int server_socket){
         // Send the user input to the client.
         write(server_socket, input, sizeof(input));
         write(server_socket, content, sizeof(content));
+        write(server_socket, pid_str, sizeof(pid_str));
     // Read the modified string from the server
     // read(server_socket, input, sizeof(input));
 
@@ -63,6 +68,15 @@ void clientLogic(int server_socket){
         char post_name[BUFFER_SIZE];
         int num;
         sscanf(input, "%d", &num);
+
+        int *posts;
+        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        posts = (int *)shmat(shmid02, 0, 0);
+
+        if(posts[num-1] != getpid()) {
+            printf("You do not have permission to edit this post!\n");
+        }
+        else{
         sprintf(post_name, "p%d", num);
         int post = open(post_name, O_RDONLY, 0);
         char* content = file_to_string(post_name);
@@ -148,6 +162,7 @@ void clientLogic(int server_socket){
             printf("Not a valid command!\n");
         }
         }
+        }
         else {
             printf("Not a valid command!\n");
         }
@@ -161,9 +176,9 @@ int main(int argc, char *argv[] ) {
         IP=argv[1];
     }
     //accessing semaphore
-    printf("Waiting for server... This may take a moment\n");
+    // printf("Waiting for server... This may take a moment\n");
     // int semd;
-    int *data;
+    // int *data;
     // semd = semget(KEY, 1, 0);
     // if(semd == -1){
     //     printf("error %d: %s\n", errno, strerror(errno));
@@ -230,6 +245,16 @@ int main(int argc, char *argv[] ) {
     // posts = shmat(shmid02, 0, 0);
     // printf("posts: %d\n",*posts);
     clientLogic(server_socket);
+    while(1){
+        int server_socket = client_tcp_handshake(IP);
+        clientLogic(server_socket);
+    }
+
+    // int *posts;
+    // int shmid02;
+    // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    // posts = shmat(shmid02, 0, 0);
+    // printf("posts: %d\n",*posts);
 
 
     //downing semaphore
