@@ -61,3 +61,5 @@ HW: Editing feature now allows users to replace specific posts based on number i
 
 ### 2024-01-8 - Brief description
 CW: Changed editing feature so that it you can edit the title and content of a post separately. Forum asks user if they want to change title or content. Worked on getting data from posts.
+
+HW: Worked on displaying forum in the terminal to the client side. The terminal displays the last 4 post titles to the client. If the a new post is updated, the forum shown to the client is updated. Will work on implementing scrolling with the up and down key.

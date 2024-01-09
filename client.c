@@ -192,11 +192,12 @@ int main(int argc, char *argv[] ) {
     // sb.sem_op = -1;
     // semop(semd, &sb, 1);
 
+    while(1){
     //displaying the forum
     char line[BUFFER_SIZE];
     int server_socket = client_tcp_handshake(IP);
     int shmid = shmget(KEY, sizeof(int), 0640);
-    data = shmat(shmid, 0, 0); //attach
+    int* data = shmat(shmid, 0, 0); //attach
 
     char lines[5][BUFFER_SIZE];
     int NUM_LINES = 5;
@@ -244,9 +245,7 @@ int main(int argc, char *argv[] ) {
     // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
     // posts = shmat(shmid02, 0, 0);
     // printf("posts: %d\n",*posts);
-    clientLogic(server_socket);
-    while(1){
-        int server_socket = client_tcp_handshake(IP);
+    
         clientLogic(server_socket);
     }
 

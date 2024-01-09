@@ -25,7 +25,7 @@ static void sighandler( int signo ) {
         shmctl(shmid, IPC_RMID, 0);
 
         int shmid02;
-        shmid02 = shmget(KEY02, MAX_FILES*sizeof(struct perms), IPC_CREAT | 0640);
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
         shmctl(shmid02, IPC_RMID, 0);
 
         printf("SEGMENT & SHARED MEMORY REMOVED\n");
