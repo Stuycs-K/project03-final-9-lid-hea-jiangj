@@ -1,30 +1,134 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
+#define LINES_PER_PAGE 5
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include <pthread.h> 
+
+volatile sig_atomic_t exit_flag = 0;
+int scroll_position = -1; // Global variable for tracking scroll position
+
+void sig_handler(int signo) {
+    if (signo == SIGINT) {
+        exit_flag = 1;
+    }
+}
+
+void display_last_five_lines() {
+    FILE *file;
+    char line[MAX_LINE_LENGTH];
+    int line_count = 0, total_lines = 0;
+
+    file = fopen("forum.txt", "r");
+    if (file == NULL) {
+        perror("Error opening forum file");
+        return;
+    }
+
+    // Count total number of lines if scroll_position is not set
+    if (scroll_position == -1) {
+        while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+            total_lines++;
+        }
+        scroll_position = MAX(0, total_lines - LINES_PER_PAGE);
+        rewind(file);
+    } else {
+        // Re-count total lines each time to account for any new lines added
+        while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+            total_lines++;
+        }
+        rewind(file);
+
+        // Ensure scroll_position does not exceed the limit
+        if (scroll_position > total_lines - LINES_PER_PAGE) {
+            scroll_position = MAX(0, total_lines - LINES_PER_PAGE);
+        }
+    }
+
+    clear();
+
+    // Skip lines up to the current scroll position
+    while (line_count < scroll_position && fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+        line_count++;
+    }
+
+    // Read and display the next LINES_PER_PAGE lines
+    int displayed_lines = 0;
+    while (displayed_lines < LINES_PER_PAGE && fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+        printw("%s", line);
+        displayed_lines++;
+    }
+
+    refresh();
+    fclose(file);
+}
 
 void clientLogic(int server_socket){
-//    while(1){
-    // Prompts the user for a string.
     char pid_str[BUFFER_SIZE];
+    int ch;
+    int input_pos = 0;
     int pid_int = getpid();
     sprintf(pid_str, "%d", pid_int);
     write(server_socket, pid_str, sizeof(pid_str));
+
+    char input[BUFFER_SIZE];
+    memset(input, 0, sizeof(input));
+    input_pos = 0;
+
+    char prompt[] = "Input a command (post, view, edit, exit): ";
+    int prompt_len = strlen(prompt);
+    printw("%s",prompt);
+    int prompt_end_pos = getcurx(stdscr); // Store the cursor position at the end of the prompt
+    refresh();
     
+    
+
+    while ((ch = getch()) != '\n') {
+        if (ch == KEY_UP || ch == KEY_DOWN) {
+            // Handling scrolling
+            if (ch == KEY_UP) scroll_position = MAX(0, scroll_position - 1);
+            if (ch == KEY_DOWN) scroll_position++; // Add bounds check if needed
+            display_last_five_lines();
+            printw("%s%s", prompt, input); // Redraw the prompt and input
+            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+        else if ((ch == KEY_BACKSPACE || ch == 127) && input_pos > 0) {
+            // Handling backspace
+            input_pos--;
+            input[input_pos] = '\0';
+            // Clear and redraw the line
+            move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            clrtoeol(); // Clear the line
+            printw("%s%s", prompt, input); // Redraw the prompt and the input
+            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+        else if (input_pos < BUFFER_SIZE - 1 && isprint(ch)) {
+            // Handling character input
+            input[input_pos] = ch;
+            input_pos++;
+            // Redraw the input
+            move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            clrtoeol(); // Clear the line
+            printw("%s%s", prompt, input); // Redraw the prompt and the input
+            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+    }
+    input[input_pos] = '\0'; // Null-terminate the input string
+
+    if (strcmp(input, "exit") == 0) {
+        exit_flag = 1;
+        return;
+    }
     int semd;
     semd = semget(KEY, 1, 0);
     if(semd == -1){
-        printf("error %d: %s\n", errno, strerror(errno));
-        printf("Semaphore Does Not Yet Exist\n");
+        printw("error %d: %s\n", errno, strerror(errno));
+        printw("Semaphore Does Not Yet Exist\n");
         exit(1);
     }
-
-    char input[BUFFER_SIZE];
-    read(server_socket, input, sizeof(input));
-
-    printf("Input a command (post, view, edit): ");
-    fgets(input, sizeof(input), stdin);
-    *strchr(input, '\n') = 0;
-    // printf("About to write\n");
-    write(server_socket,input,sizeof(input));
+    write(server_socket, input, sizeof(input));
     // printf("If statement about to run\n");
     // uping semaphore
 //    printf("Connecting to Server... This may take a moment.\n");
@@ -37,12 +141,12 @@ void clientLogic(int server_socket){
         char content[BUFFER_SIZE];
         // char pid_str[BUFFER_SIZE];
         // int pid_int = getpid();
-        printf("pid: %d\n", pid_int);
+        printw("pid: %d\n", pid_int);
         // sprintf(pid_str, "%d", pid_int);
-        printf("Enter the title of your post: ");
-        fgets(input, sizeof(input), stdin);
-        printf("Enter the content of your post: ");
-        fgets(content,sizeof(content),stdin);
+        printw("Enter the title of your post: ");
+        getstr(input);
+        printw("Enter the content of your post: ");
+        getstr(content);
         // printf("fgets: %s\n",input);
         // Send the user input to the client.
         write(server_socket, input, sizeof(input));
@@ -56,8 +160,8 @@ void clientLogic(int server_socket){
     //        printf("%s", input);
     }
     else if (strcmp(input, "view") == 0) {
-        printf("Which post would you like to view? (# only): ");
-        fgets(input, sizeof(input), stdin);
+        printw("Which post would you like to view? (# only): ");
+        getstr(input);
         int num;
         sscanf(input, "%d", &num);
         char post_name[BUFFER_SIZE];
@@ -66,25 +170,25 @@ void clientLogic(int server_socket){
 
         char content[BUFFER_SIZE];
         read(server_socket, content, sizeof(content));
-        printf("Current content of %s: \n%s\n", post_name, content);
+        printw("Current content of %s: \n%s\n", post_name, content);
 
         // Prompt for reply
-        printf("Input a command (reply, back): ");
-        fgets(input, sizeof(input), stdin);
-        input[strcspn(input, "\n")] = '\0';  // Remove newline character
+        printw("Input a command (reply, back): ");
+        getstr(input);
+        // input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
         if (strcmp(input, "reply") == 0) {
-            printf("Input a reply: ");
-            fgets(input, sizeof(input), stdin);
-            input[strcspn(input, "\n")] = '\0';  // Remove newline character
+            printw("Input a reply: ");
+            getstr(input);
+            // input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
         }
 
     }
     else if(strcmp(input, "edit") == 0){
-        printf("Which post would you like to edit?(# only): ");
-        fgets(input, sizeof(input), stdin);
+        printw("Which post would you like to edit?(# only): ");
+        getstr(input);
         char post_name[BUFFER_SIZE];
         int num;
         sscanf(input, "%d", &num);
@@ -94,20 +198,20 @@ void clientLogic(int server_socket){
         posts = (int *)shmat(shmid02, 0, 0);
 
         if(posts[num-1] != getpid()) {
-            printf("You do not have permission to edit this post!\n");
+            printw("You do not have permission to edit this post!\n");
         }
         else{
         sprintf(post_name, "p%d", num);
         int post = open(post_name, O_RDONLY, 0);
         char* content = file_to_string(post_name);
-        printf("Current content of %s: \n%s", post_name, content);
+        printw("Current content of %s: \n%s", post_name, content);
         close(post);
-        printf("Would you like to edit the title or content of this post (title, content): ");
+        printw("Would you like to edit the title or content of this post (title, content): ");
         char choice[BUFFER_SIZE];
-        fgets(choice,sizeof(choice),stdin);
-        printf("What would you like to replace it with: ");
+        getstr(choice);
+        printw("What would you like to replace it with: ");
         char replacement[BUFFER_SIZE];
-        fgets(replacement,sizeof(replacement),stdin);
+        getstr(replacement);
 
         FILE *file, *tempFile;
         char buffer[BUFFER_SIZE];
@@ -154,7 +258,7 @@ void clientLogic(int server_socket){
             memset(buffer,0,sizeof(buffer));
             memset(replacement1,0,sizeof(replacement1));
             sprintf(replacement1,"p%d: %s",num,replacement);
-            printf("Replacment: %s",replacement1);
+            printw("Replacment: %s",replacement1);
 
 
             currentLine = 1;
@@ -162,7 +266,6 @@ void clientLogic(int server_socket){
             while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
                 // If the current line is the line to replace, write the new line to the temp file
                 if (currentLine == 1) {
-                    printf("This ran!\n");
                     fputs(replacement1, tempFile);
                 } else {
                     // Otherwise, write the original line
@@ -179,12 +282,15 @@ void clientLogic(int server_socket){
             rename("temp.txt", post_name);
         }
         else {
-            printf("Not a valid command!\n");
+            printw("Not a valid command!\n");
         }
         }
         }
+    else if (strcmp(input, "exit") == 0) {
+        exit_flag = 1;  // Set the exit flag to break the main loop
+    }
     else {
-        printf("Not a valid command!\n");
+        printw("Not a valid command!\n");
     }
     //downing semaphore
     sb.sem_op = 1;
@@ -193,94 +299,81 @@ void clientLogic(int server_socket){
 }
 
 
-int main(int argc, char *argv[] ) {
-    keypad(stdscr, TRUE);
+int current_position = 0;
+
+// Key listener thread function
+void* key_listener(void* p) {
     int ch;
-    nodelay(stdscr, TRUE);
-    for (;;) {
-          if ((ch = getch()) == ERR) {
-              /* user hasn't responded
-               ...
-              */
-          }
-          else {
-              if (ch==KEY_DOWN) {
-                printf("Key down pressed\n");
-              }
-              else if(ch==KEY_UP) {
-                printf("Key up pressed\n");
-              }
-          }
-     }
+    while (1) {
+        ch = getch();
+        if(ch == KEY_UP) {
+            current_position = MAX(0, current_position - 1);
+        } else if(ch == KEY_DOWN) {
+            current_position++;
+        }
+        // Trigger display update here if needed
+    }
+    return NULL;
+}
+
+//outdated code for displaying last 5 lines
+// FILE* forum1 = fopen("forum.txt","r");
+//         if (forum1 == NULL) {
+//             perror("Error opening file");
+//             return 1;
+//         }
+
+//         // Seek to the end of the file
+//         fseek(forum1, 0, SEEK_END);
+//         filePos = ftell(forum1);
+
+//         // Move backwards through the file to find the 5th last newline
+//         while (lineCount < targetLine && filePos >= 0) {
+//             fseek(forum1, --filePos, SEEK_SET);
+//             if (fgetc(forum1) == '\n') {
+//                 lineCount++;
+//             }
+//         }
+
+//         // Read and print the last 5 lines
+//         if (lineCount < targetLine) {
+//             // The file has less than 5 lines, so go to the start
+//             fseek(forum1, 0, SEEK_SET);
+//         } else {
+//             // Go to the start of the line
+//             fseek(forum1, filePos + 1, SEEK_SET);
+//         }
+
+//         for (int i = 0;i<lineCount;i++) {
+//             if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+//                 printf("%s",lines[i]);
+//             }
+//         }
+//         fclose(forum1);
+
+
+int main(int argc, char *argv[]) {
     char* IP = NULL;
-    if(argc>1){
-        IP=argv[1];
+    initscr();
+    cbreak();
+    // noecho();
+    keypad(stdscr, TRUE);
+    signal(SIGINT, sig_handler);
+
+    if (argc > 1) {
+        IP = argv[1];
     }
 
-    while(1){
-        //displaying the forum
-        char line[BUFFER_SIZE];
-        int server_socket = client_tcp_handshake(IP);
-        int shmid = shmget(KEY, sizeof(int), 0640);
-        int* data = shmat(shmid, 0, 0); //attach
+    int server_socket = client_tcp_handshake(IP);
 
-        char lines[5][BUFFER_SIZE];
-        int NUM_LINES = 5;
-        int line_nums[NUM_LINES];
-        char buffer[MAX_LINE_LENGTH];
-        long filePos;
-        int lineCount = 0, targetLine = 5;
-
-        FILE* forum1 = fopen("forum.txt","r");
-        if (forum1 == NULL) {
-            perror("Error opening file");
-            return 1;
-        }
-
-        // Seek to the end of the file
-        fseek(forum1, 0, SEEK_END);
-        filePos = ftell(forum1);
-
-        // Move backwards through the file to find the 5th last newline
-        while (lineCount < targetLine && filePos >= 0) {
-            fseek(forum1, --filePos, SEEK_SET);
-            if (fgetc(forum1) == '\n') {
-                lineCount++;
-            }
-        }
-
-        // Read and print the last 5 lines
-        if (lineCount < targetLine) {
-            // The file has less than 5 lines, so go to the start
-            fseek(forum1, 0, SEEK_SET);
-        } else {
-            // Go to the start of the line
-            fseek(forum1, filePos + 1, SEEK_SET);
-        }
-
-        for (int i = 0;i<lineCount;i++) {
-            if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-                printf("%s",lines[i]);
-            }
-        }
-        fclose(forum1);
-
-        // int *posts;
-        // int shmid02;
-        // shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-        // posts = shmat(shmid02, 0, 0);
-        // printf("posts: %d\n",*posts);
-        
-            clientLogic(server_socket);
-    // printf("MOST RECENT POSTS:\n===================================================\n");
-    // for (int i = 0;i<lineCount;i++) {
-    //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-    //         printf("%s",lines[i]);
-    //     }
-    // }
-    // printf("===================================================\n");
-    // fclose(forum1);
-    // clientLogic(server_socket);
+    while (!exit_flag) {
+        display_last_five_lines();
+        char input[BUFFER_SIZE];
+        clientLogic(server_socket);
     }
+
+    endwin();
+    close(server_socket);
+    return 0;
 }
 
