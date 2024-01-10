@@ -101,8 +101,7 @@ char* file_to_string(const char* filename) {
         perror("fopen failure");
         exit(1);
     }
-
-    char* accum = malloc(1); 
+    char* accum = malloc(BUFFER_SIZE); 
     char line[BUFFER_SIZE]; 
 
     while (fgets(line, sizeof(line), file) != NULL) {
@@ -115,7 +114,23 @@ char* file_to_string(const char* filename) {
         accum = new_content;
         strcat(accum, line);
     }
-
+    accum[strlen(accum)] = '\0';
     fclose(file);
     return accum;
 }
+
+// char* file_to_string2(const char* filename) {
+//     FILE* file = fopen(filename, "r");
+//     char* accum = malloc(BUFFER_SIZE);
+//     if (file == NULL) {
+//         perror("fopen failure");
+//         exit(1);
+//     }
+//     char line[BUFFER_SIZE];
+//     while (fgets(line,sizeof(line),file)) {
+//       strcat(accum,line);
+//     }
+//     accum[strlen(accum)] = '\0';
+//     printf("accum: %s\n",accum);
+//     return accum;
+// }

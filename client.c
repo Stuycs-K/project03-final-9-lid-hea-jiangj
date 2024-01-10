@@ -20,7 +20,7 @@ void clientLogic(int server_socket){
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
 
-    printf("Input a command (post, view, edit): ");
+    printf("Input a command (post, view, edit, delete): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -99,6 +99,28 @@ void clientLogic(int server_socket){
             fgets(replacement,sizeof(replacement),stdin);
             write(server_socket, choice, sizeof(choice));
             write(server_socket, replacement, sizeof(replacement));
+        }
+        else{
+            read(server_socket, input, sizeof(input));
+            printf("%s", input);
+        }
+    }
+    else if(strcmp(input, "delete") == 0){
+        //make sure user has permissions
+        
+        //delete post file
+        //delete title from forum.txt
+        //down data by 1
+        char pid[BUFFER_SIZE];
+        printf("Which post would you like to delete?(# only): ");
+        fgets(input, sizeof(input), stdin);
+        write(server_socket, input, sizeof(input));
+        sprintf(pid, "%d", getpid());
+        write(server_socket, pid, sizeof(pid));
+        read(server_socket, input, sizeof(input));
+        if(strcmp(input, "NO") != 0) {
+            char choice[BUFFER_SIZE];
+            
         }
         else{
             read(server_socket, input, sizeof(input));
