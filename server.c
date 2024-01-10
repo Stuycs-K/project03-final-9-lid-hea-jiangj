@@ -376,17 +376,17 @@ void subserver_logic(int client_socket){
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");
-    int forum = open("forum.txt",O_RDONLY);
-    // printf("%s", file_to_string("forum.txt"));
+    // int forum = open("forum.txt",O_RDONLY);
+    // // printf("%s", file_to_string("forum.txt"));
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
     int numStrings = 0;

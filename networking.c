@@ -121,7 +121,7 @@ void file_to_string(const char* filename, char *accum) {
     int file = open(filename, O_RDONLY, 0666);
     char buff[BUFFER_SIZE] = "";
     int byte;
-    while(byte = read(file, buff, BUFFER_SIZE)) {
+    while((byte = read(file, buff, BUFFER_SIZE))) {
         strcat(accum, buff);
     }
     accum[strlen(accum)] = '\0';
