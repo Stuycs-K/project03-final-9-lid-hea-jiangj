@@ -25,6 +25,9 @@ HW: finished a basic reply feature to updated each post file, fixed file_to_stri
 CW: fixed client print errors and command options, added nametags based on pid to each post and reply
 HW: worked on formating issues and finished name tags
 
+### 2024-01-10 - Brief description
+CW: worked on file_to_string to work on linux servers, changed forum display to all posts rather than recent
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description

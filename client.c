@@ -19,8 +19,9 @@ void clientLogic(int server_socket){
 
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
+    printf("%s", input);
 
-    printf("Input a command (post, view, edit): ");
+    printf("Input a command (post, view, edit, delete): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -105,6 +106,28 @@ void clientLogic(int server_socket){
             printf("%s", input);
         }
     }
+    else if(strcmp(input, "delete") == 0){
+        //make sure user has permissions
+        
+        //delete post file
+        //delete title from forum.txt
+        //down data by 1
+        char pid[BUFFER_SIZE];
+        printf("Which post would you like to delete?(# only): ");
+        fgets(input, sizeof(input), stdin);
+        write(server_socket, input, sizeof(input));
+        sprintf(pid, "%d", getpid());
+        write(server_socket, pid, sizeof(pid));
+        read(server_socket, input, sizeof(input));
+        if(strcmp(input, "NO") != 0) {
+            char choice[BUFFER_SIZE];
+            
+        }
+        else{
+            read(server_socket, input, sizeof(input));
+            printf("%s", input);
+        }
+    }
     else {
         printf("Not a valid command!\n");
     }
@@ -116,17 +139,21 @@ void clientLogic(int server_socket){
 
 int main(int argc, char *argv[] ) {
     
+    // checks for the IP of the server the client should connect to
     char* IP = NULL;
     if(argc>1){
         IP=argv[1];
     }
 
     while(1){
-        //displaying the forum
         char line[BUFFER_SIZE];
+
+        // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
+
+        //creates shared memory
         int shmid = shmget(KEY, sizeof(int), 0640);
-        int* data = shmat(shmid, 0, 0); //attach
+        int* data = shmat(shmid, 0, 0);
 
         char lines[5][BUFFER_SIZE];
         int NUM_LINES = 5;
@@ -135,52 +162,44 @@ int main(int argc, char *argv[] ) {
         long filePos;
         int lineCount = 0, targetLine = 5;
 
-        FILE* forum1 = fopen("forum.txt","r");
-        if (forum1 == NULL) {
-            perror("Error opening file");
-            return 1;
-        }
+        // opens file
+        // FILE* forum1 = fopen("forum.txt","r");
+        // if (forum1 == NULL) {
+        //     perror("Error opening file");
+        //     return 1;
+        // }
 
-        // Seek to the end of the file
-        fseek(forum1, 0, SEEK_END);
-        filePos = ftell(forum1);
+        // // Seek to the end of the file
+        // fseek(forum1, 0, SEEK_END);
+        // filePos = ftell(forum1);
 
-        // Move backwards through the file to find the 5th last newline
-        while (lineCount < targetLine && filePos >= 0) {
-            fseek(forum1, --filePos, SEEK_SET);
-            if (fgetc(forum1) == '\n') {
-                lineCount++;
-            }
-        }
+        // // Move backwards through the file to find the 5th last newline
+        // while (lineCount < targetLine && filePos >= 0) {
+        //     fseek(forum1, --filePos, SEEK_SET);
+        //     if (fgetc(forum1) == '\n') {
+        //         lineCount++;
+        //     }
+        // }
 
-        // Read and print the last 5 lines
-        if (lineCount < targetLine) {
-            // The file has less than 5 lines, so go to the start
-            fseek(forum1, 0, SEEK_SET);
-        } else {
-            // Go to the start of the line
-            fseek(forum1, filePos + 1, SEEK_SET);
-        }
+        // // Read and print the last 5 lines
+        // if (lineCount < targetLine) {
+        //     // The file has less than 5 lines, so go to the start
+        //     fseek(forum1, 0, SEEK_SET);
+        // } else {
+        //     // Go to the start of the line
+        //     fseek(forum1, filePos + 1, SEEK_SET);
+        // }
 
-        printf("MOST RECENT POSTS:\n===================================================\n");
-        for (int i = 0;i<lineCount;i++) {
-            if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-                printf("%s",lines[i]);
-            }
-        }
-        printf("===================================================\n");
-        fclose(forum1);
+        // printf("MOST RECENT POSTS:\n===================================================\n");
+        // for (int i = 0;i<lineCount;i++) {
+        //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+        //         printf("%s",lines[i]);
+        //     }
+        // }
+        // printf("===================================================\n");
+        // fclose(forum1);
         
         clientLogic(server_socket);
-    // printf("MOST RECENT POSTS:\n===================================================\n");
-    // for (int i = 0;i<lineCount;i++) {
-    //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
-    //         printf("%s",lines[i]);
-    //     }
-    // }
-    // printf("===================================================\n");
-    // fclose(forum1);
-    // clientLogic(server_socket);
     }
 }
 
