@@ -43,7 +43,7 @@ static void sighandler( int signo ) {
 
 
 void subserver_logic(int client_socket){
-    char clientPID[BUFFER_SIZE];
+    char clientPID[BUFFER_SIZE+12];
     read(client_socket, clientPID, sizeof(clientPID));
     printf("clientPID: %s\n", clientPID);
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
@@ -102,7 +102,7 @@ void subserver_logic(int client_socket){
         sprintf(post_creator, "\n[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
         write(post, new_input, strlen(new_input));
-        char post_content[BUFFER_SIZE+10];
+        char post_content[BUFFER_SIZE*3];
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = pid_int;
@@ -120,9 +120,17 @@ void subserver_logic(int client_socket){
             char* post_name = input;
             int post = open(post_name, O_WRONLY | O_APPEND, 0666);
             char* post_content = file_to_string(post_name);
+            // int post = open(post_name, O_RDONLY, 0);
+            // char post_content[BUFFER_SIZE];
+            // int bytes;
+            // char buff[BUFFER_SIZE];
+            // while(bytes = read(post, buff, BUFFER_SIZE)){
+            //     strcat(post_content, buff);
+            // }
             write(client_socket, post_content, strlen(post_content));
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
+                char reply[BUFFER_SIZE*3];
                 char reply[BUFFER_SIZE*3];
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
@@ -141,7 +149,117 @@ void subserver_logic(int client_socket){
             write(client_socket, invalid, sizeof(invalid));
         }
     }
-    
+    else if (strcmp(input, "edit")==0) {
+        read(client_socket, input, sizeof(input));
+        char post_name[BUFFER_SIZE];
+        int num;
+        sscanf(input, "%d", &num);
+        printf("%d\n", num);
+
+        //shared memory
+        int *posts;
+        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        posts = (int *)shmat(shmid02, 0, 0);
+
+        //permission
+        char pid_str[BUFFER_SIZE];
+        int pid_int;
+        read(client_socket, pid_str, sizeof(pid_str));
+        sscanf(pid_str, "%d", &pid_int);
+        if(posts[num-1] != pid_int) {
+            char answer[BUFFER_SIZE] = "NO";
+            write(client_socket, answer, sizeof(answer));
+            char reply[BUFFER_SIZE] = "You do not have permission to edit this post!\n";
+            write(client_socket, reply, sizeof(reply));
+        }
+        else{
+            char answer[BUFFER_SIZE] = "YES";
+            write(client_socket, answer, sizeof(answer));
+            sprintf(post_name, "p%d", num);
+            int post = open(post_name, O_RDONLY, 0);
+            char* content = file_to_string(post_name);
+            printf("Current content of %s: \n%s", post_name, content);
+            close(post);
+
+            char choice[BUFFER_SIZE];
+            char replacement[BUFFER_SIZE];
+            read(client_socket, choice, sizeof(choice));
+            read(client_socket, replacement, sizeof(replacement));
+
+            FILE *file, *tempFile;
+            char buffer[BUFFER_SIZE];
+            int lineToReplace = num; // The line number to replace
+            char *newLine = replacement; // The new line content
+            char replacement1[BUFFER_SIZE+10];
+            sprintf(replacement1,"p%d: %s",num,replacement);
+            char *newLine1 = replacement1;
+            int currentLine = 1;
+
+            if (strcmp(choice,"title\n")==0) {
+                file = fopen("forum.txt", "r");
+                tempFile = fopen("temp.txt", "w");
+
+                if (file == NULL || tempFile == NULL) {
+                    perror("Error opening file!\n");
+                }
+
+                // Read from the original file and write to the temporary file
+                while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == lineToReplace) {
+                        fputs(newLine1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                // Close the files
+                fclose(file);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove("forum.txt");
+                rename("temp.txt", "forum.txt");
+            }
+        
+            else if (strcmp(choice,"content\n")==0) {
+                FILE * pFile = fopen(post_name, "r");
+                tempFile = fopen("temp.txt", "w");
+
+                memset(buffer,0,sizeof(buffer));
+                memset(replacement1,0,sizeof(replacement1));
+                sprintf(replacement1,"p%d: %s",num,replacement);
+                printf("Replacment: %s",replacement1);
+
+                currentLine = 1;
+
+                while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == 1) {
+                        printf("This ran!\n");
+                        fputs(replacement1, tempFile);
+                    } 
+                    else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                fclose(pFile);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove(post_name);
+                rename("temp.txt", post_name);
+            }
+            else {
+                printf("Not a valid command!\n");
+            }
+        }
+    }
     else if(strcmp(input,"reply")==0) {
         printf("Still working on this!\n");
     }
@@ -150,6 +268,12 @@ void subserver_logic(int client_socket){
     }
 }
 
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 union semun {
     int val;
     struct semid_ds *buf;

@@ -295,7 +295,6 @@ void clientLogic(int server_socket){
     //downing semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
-    //    }
 }
 
 
