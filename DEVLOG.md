@@ -84,4 +84,4 @@ HW: Worked on displaying forum in the terminal to the client side. The terminal 
 ### 2024-01-9 - Brief description
 CW: Worked on implementing ncurses. Installed ncurses on my local machine. Started working on checking up and down arrows.
 
-HW: 
+HW: Spent like 4 hours working on ncurses and changed stuff like printf to printw and fgets to getstr and used getch and stuff. Faced a lot of errors with actually implementing the scrolling but did that. However only implemented scrolling on the command prompt where it asks the user for a command. Need to add that to other parts like posts, replies, just any other part where it asks the user for input. Added it to an extra branch (called extra) because it was too much code to merge main with and too complex to work on for now. Will work on implementing it later if have time.
