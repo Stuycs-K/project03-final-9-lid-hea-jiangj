@@ -49,15 +49,9 @@ void subserver_logic(int client_socket){
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
     //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
-//     char accum[BUFFER_SIZE] = "";
-//     char line[BUFFER_SIZE];
-//     while (fgets(line,BUFFER_SIZE,forum2)) {
-//         strcat(accum,line);
-// //        strcat(accum,"---------------------------------\n");
-//     }
-//     accum[strlen(accum)] = '\0';
     char* accum = file_to_string("forum.txt");
     write(client_socket, accum, strlen(accum));
+//    printf("%s", accum);
     fflush(stdin);
 
 //    printf("Accum: %s\n",accum);
