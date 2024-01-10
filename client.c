@@ -83,113 +83,124 @@ void clientLogic(int server_socket){
 
     }
     else if(strcmp(input, "edit") == 0){
+        char pid[BUFFER_SIZE];
         printf("Which post would you like to edit?(# only): ");
         fgets(input, sizeof(input), stdin);
-        char post_name[BUFFER_SIZE];
-        int num;
-        sscanf(input, "%d", &num);
+        write(server_socket, input, sizeof(input));
+        sprintf(pid, "%d", getpid());
+        write(server_socket, pid, sizeof(pid));
+        read(server_socket, input, sizeof(input));
+        if(strcmp(input, "NO") != 0) {
 
-        int *posts;
-        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-        posts = (int *)shmat(shmid02, 0, 0);
+        // char post_name[BUFFER_SIZE];
+        // int num;
+        // sscanf(input, "%d", &num);
 
-        if(posts[num-1] != getpid()) {
-            printf("You do not have permission to edit this post!\n");
+        // int *posts;
+        // int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        // posts = (int *)shmat(shmid02, 0, 0);
+
+        // if(posts[num-1] != getpid()) {
+        //     printf("You do not have permission to edit this post!\n");
+        // }
+        // else{
+        // sprintf(post_name, "p%d", num);
+        // int post = open(post_name, O_RDONLY, 0);
+        // char* content = file_to_string(post_name);
+        // printf("Current content of %s: \n%s", post_name, content);
+        // close(post);
+            char choice[BUFFER_SIZE];
+            char replacement[BUFFER_SIZE];
+            printf("Would you like to edit the title or content of this post (title, content): ");
+            fgets(choice,sizeof(choice),stdin);
+            printf("What would you like to replace it with: ");
+            fgets(replacement,sizeof(replacement),stdin);
+            write(server_socket, choice, sizeof(choice));
+            write(server_socket, replacement, sizeof(replacement));
         }
         else{
-        sprintf(post_name, "p%d", num);
-        int post = open(post_name, O_RDONLY, 0);
-        char* content = file_to_string(post_name);
-        printf("Current content of %s: \n%s", post_name, content);
-        close(post);
-        printf("Would you like to edit the title or content of this post (title, content): ");
-        char choice[BUFFER_SIZE];
-        fgets(choice,sizeof(choice),stdin);
-        printf("What would you like to replace it with: ");
-        char replacement[BUFFER_SIZE];
-        fgets(replacement,sizeof(replacement),stdin);
-
-        FILE *file, *tempFile;
-        char buffer[BUFFER_SIZE];
-        int lineToReplace = num; // The line number to replace
-        char *newLine = replacement; // The new line content
-        char replacement1[BUFFER_SIZE+10];
-        sprintf(replacement1,"p%d: %s",num,replacement);
-        char *newLine1 = replacement1;
-        int currentLine = 1;
-
-        if (strcmp(choice,"title\n")==0) {
-            file = fopen("forum.txt", "r");
-            tempFile = fopen("temp.txt", "w");
-
-            if (file == NULL || tempFile == NULL) {
-                perror("Error opening file!\n");
-            }
-
-            // Read from the original file and write to the temporary file
-            while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-                // If the current line is the line to replace, write the new line to the temp file
-                if (currentLine == lineToReplace) {
-                    fputs(newLine1, tempFile);
-                } else {
-                    // Otherwise, write the original line
-                    fputs(buffer, tempFile);
-                }
-                currentLine++;
-            }
-
-            // Close the files
-            fclose(file);
-            fclose(tempFile);
-
-            // Delete the original file and rename the temporary file to the original file name
-            remove("forum.txt");
-            rename("temp.txt", "forum.txt");
+            read(server_socket, input, sizeof(input));
+            printf("%s", input);
         }
+        // FILE *file, *tempFile;
+        // char buffer[BUFFER_SIZE];
+        // int lineToReplace = num; // The line number to replace
+        // char *newLine = replacement; // The new line content
+        // char replacement1[BUFFER_SIZE+10];
+        // sprintf(replacement1,"p%d: %s",num,replacement);
+        // char *newLine1 = replacement1;
+        // int currentLine = 1;
+
+        // if (strcmp(choice,"title\n")==0) {
+        //     file = fopen("forum.txt", "r");
+        //     tempFile = fopen("temp.txt", "w");
+
+        //     if (file == NULL || tempFile == NULL) {
+        //         perror("Error opening file!\n");
+        //     }
+
+        //     // Read from the original file and write to the temporary file
+        //     while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+        //         // If the current line is the line to replace, write the new line to the temp file
+        //         if (currentLine == lineToReplace) {
+        //             fputs(newLine1, tempFile);
+        //         } else {
+        //             // Otherwise, write the original line
+        //             fputs(buffer, tempFile);
+        //         }
+        //         currentLine++;
+        //     }
+
+        //     // Close the files
+        //     fclose(file);
+        //     fclose(tempFile);
+
+        //     // Delete the original file and rename the temporary file to the original file name
+        //     remove("forum.txt");
+        //     rename("temp.txt", "forum.txt");
+        // }
         
-        else if (strcmp(choice,"content\n")==0) {
-            FILE * pFile = fopen(post_name, "r");
-            tempFile = fopen("temp.txt", "w");
+        // else if (strcmp(choice,"content\n")==0) {
+        //     FILE * pFile = fopen(post_name, "r");
+        //     tempFile = fopen("temp.txt", "w");
 
-            memset(buffer,0,sizeof(buffer));
-            memset(replacement1,0,sizeof(replacement1));
-            sprintf(replacement1,"p%d: %s",num,replacement);
-            printf("Replacment: %s",replacement1);
+        //     memset(buffer,0,sizeof(buffer));
+        //     memset(replacement1,0,sizeof(replacement1));
+        //     sprintf(replacement1,"p%d: %s",num,replacement);
+        //     printf("Replacment: %s",replacement1);
 
 
-            currentLine = 1;
+        //     currentLine = 1;
 
-            while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
-                // If the current line is the line to replace, write the new line to the temp file
-                if (currentLine == 1) {
-                    printf("This ran!\n");
-                    fputs(replacement1, tempFile);
-                } else {
-                    // Otherwise, write the original line
-                    fputs(buffer, tempFile);
-                }
-                currentLine++;
-            }
+        //     while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+        //         // If the current line is the line to replace, write the new line to the temp file
+        //         if (currentLine == 1) {
+        //             printf("This ran!\n");
+        //             fputs(replacement1, tempFile);
+        //         } else {
+        //             // Otherwise, write the original line
+        //             fputs(buffer, tempFile);
+        //         }
+        //         currentLine++;
+        //     }
 
-            fclose(pFile);
-            fclose(tempFile);
+        //     fclose(pFile);
+        //     fclose(tempFile);
 
-            // Delete the original file and rename the temporary file to the original file name
-            remove(post_name);
-            rename("temp.txt", post_name);
-        }
-        else {
-            printf("Not a valid command!\n");
-        }
-        }
-        }
+        //     // Delete the original file and rename the temporary file to the original file name
+        //     remove(post_name);
+        //     rename("temp.txt", post_name);
+        // }
+        // else {
+        //     printf("Not a valid command!\n");
+        // }
+    }
     else {
         printf("Not a valid command!\n");
     }
     //downing semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
-    //    }
 }
 
 
