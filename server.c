@@ -43,7 +43,7 @@ static void sighandler( int signo ) {
 
 
 void subserver_logic(int client_socket){
-    char clientPID[BUFFER_SIZE];
+    char clientPID[BUFFER_SIZE+12];
     read(client_socket, clientPID, sizeof(clientPID));
     printf("clientPID: %s\n", clientPID);
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
@@ -98,11 +98,11 @@ void subserver_logic(int client_socket){
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
-        char post_creator[BUFFER_SIZE];
-        sprintf(post_creator, "\n[by user%s]\n", clientPID);
+        char post_creator[BUFFER_SIZE*3];
+        sprintf(post_creator, "[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
         write(post, new_input, strlen(new_input));
-        char post_content[BUFFER_SIZE+10];
+        char post_content[BUFFER_SIZE*3];
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = pid_int;
@@ -120,10 +120,17 @@ void subserver_logic(int client_socket){
             char* post_name = input;
             int post = open(post_name, O_WRONLY | O_APPEND, 0666);
             char* post_content = file_to_string(post_name);
+            // int post = open(post_name, O_RDONLY, 0);
+            // char post_content[BUFFER_SIZE];
+            // int bytes;
+            // char buff[BUFFER_SIZE];
+            // while(bytes = read(post, buff, BUFFER_SIZE)){
+            //     strcat(post_content, buff);
+            // }
             write(client_socket, post_content, strlen(post_content));
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
-                char reply[BUFFER_SIZE];
+                char reply[BUFFER_SIZE*3];
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
@@ -260,12 +267,12 @@ void subserver_logic(int client_socket){
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");

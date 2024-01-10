@@ -49,6 +49,10 @@ WORK: worked on functions that allows the client user to read and edit the indiv
 CW: brainstormed what logistics would be used to establish permission for editing certain posts in our program. debated between using created a shared memory of structs that contains process pid and file number or a share memory array of ints; decided on shared memory array of int after researching and learning shared memory cannot share malloc'ed. established basic code for permission access
 HW: implemeneted constant prompting by the client to prevent pid from changing. added permissions via shared memory of an array of ints that contains the process pid for each client and checks to see whether the client process that's trying to access the post has the same pid as the one who created it
 
+### 2024-01-08
+CW: re-implemented semaphores to prevent shared memory issues when creating posts from two different clients. began transferring client logic to server logic for editing functions to make the program more aligned with the server client base.
+HW: succesffuly transferred client logic for editing to server side and debugged issue with permissions not found earlier regarding client pid not being transferred properly. encountered error with editing and viewing when trying to view file content (working on)
+
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description

@@ -26,7 +26,5 @@ p25: cats or dogs?
 p26: sandwich or borger
 p27: new post hooray
 p28: new post by me user3764
-p29: title of my post
-p30: p30
-p31: new post hooray
-p32: new post
+p29: animal
+p30: hellow yellow
