@@ -26,6 +26,8 @@ int server_setup();
 int client_tcp_handshake(char*server_address);
 int server_tcp_handshake(int listen_socket);
 char* file_to_string(const char* filename);
+char* file_to_string2(const char* filename);
+
 #define KEY 0x000022d7
 #define KEY02 0x000044a2
 #endif
