@@ -25,6 +25,10 @@ HW: finished a basic reply feature to updated each post file, fixed file_to_stri
 CW: fixed client print errors and command options, added nametags based on pid to each post and reply
 HW: worked on formating issues and finished name tags
 
+### 2024-01-10 - Brief description
+CW: worked on file_to_string to work on linux servers, changed forum display to all posts rather than recent
+HW: cleaned up code and reset forum file to have files attached to each post, started workin gon a search function, cleaned up the code
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
@@ -85,3 +89,6 @@ HW: Worked on displaying forum in the terminal to the client side. The terminal 
 CW: Worked on implementing ncurses. Installed ncurses on my local machine. Started working on checking up and down arrows.
 
 HW: Spent like 4 hours working on ncurses and changed stuff like printf to printw and fgets to getstr and used getch and stuff. Faced a lot of errors with actually implementing the scrolling but did that. However only implemented scrolling on the command prompt where it asks the user for a command. Need to add that to other parts like posts, replies, just any other part where it asks the user for input. Added it to an extra branch (called extra) because it was too much code to merge main with and too complex to work on for now. Will work on implementing it later if have time.
+
+### 2024-01-10 - Brief description
+CW: Discussed ncurses with Mr. K. Got delete feature to work.

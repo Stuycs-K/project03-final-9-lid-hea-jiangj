@@ -33,34 +33,32 @@ static void sighandler( int signo ) {
     }
 }
 
-// void sort_forum(int forum){
-//     int alphabetical = open("alphabetical.txt",O_WRONLY | O_APPEND);
-//     // Listens for a string (use the buffer size)
-//     char line[BUFFER_SIZE];
-//     fgets(line, sizeof(line), forum*);
-//     printf("%s",line);
-// }
 
+void search_file(const char* filename, char* string) {
+    int file = open(filename, O_RDONLY, 0666);
+    char buff[BUFFER_SIZE] = "";
+    char new_string[BUFFER_SIZE] = "";
+    int byte;
+    while((byte = read(file, buff, BUFFER_SIZE))) {
+        if (strstr(buff, string) != NULL){
+            strcat(new_string, buff);
+        }
+    }
+    new_string[strlen(new_string)] = '\0';
+    close(file);
+}
 
 void subserver_logic(int client_socket){
     char clientPID[BUFFER_SIZE+12];
     read(client_socket, clientPID, sizeof(clientPID));
     printf("clientPID: %s\n", clientPID);
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
-    //Sends array of 3 most recent posts to client
     FILE* forum2 = fopen("forum.txt","r");
-//     char accum[BUFFER_SIZE] = "";
-//     char line[BUFFER_SIZE];
-//     while (fgets(line,BUFFER_SIZE,forum2)) {
-//         strcat(accum,line);
-// //        strcat(accum,"---------------------------------\n");
-//     }
-//     accum[strlen(accum)] = '\0';
-    char* accum = file_to_string("forum.txt");
+    char accum[BUFFER_SIZE] = "";
+    file_to_string("forum.txt", accum);
     write(client_socket, accum, strlen(accum));
+//    printf("%s", accum);
     fflush(stdin);
-
-//    printf("Accum: %s\n",accum);
 
     // Gets the client's command
     char input[BUFFER_SIZE];
@@ -119,14 +117,8 @@ void subserver_logic(int client_socket){
         if (strlen(input) <= 3){
             char* post_name = input;
             int post = open(post_name, O_WRONLY | O_APPEND, 0666);
-            char* post_content = file_to_string(post_name);
-            // int post = open(post_name, O_RDONLY, 0);
-            // char post_content[BUFFER_SIZE];
-            // int bytes;
-            // char buff[BUFFER_SIZE];
-            // while(bytes = read(post, buff, BUFFER_SIZE)){
-            //     strcat(post_content, buff);
-            // }
+            char post_content[BUFFER_SIZE];
+            file_to_string(post_name, post_content);
             write(client_socket, post_content, strlen(post_content));
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
@@ -176,7 +168,8 @@ void subserver_logic(int client_socket){
             write(client_socket, answer, sizeof(answer));
             sprintf(post_name, "p%d", num);
             int post = open(post_name, O_RDONLY, 0);
-            char* content = file_to_string(post_name);
+            char content[BUFFER_SIZE] = "";
+            file_to_string(post_name, content);
             printf("Current content of %s: \n%s", post_name, content);
             close(post);
 
@@ -258,17 +251,17 @@ void subserver_logic(int client_socket){
             }
         }
     }
-    else if(strcmp(input,"delete")==0) {
-        read(client_socket, input, sizeof(input));
-        char post_name[BUFFER_SIZE];
-        int num;
-        sscanf(input, "%d", &num);
-        printf("%d\n", num);
+    // else if(strcmp(input,"delete")==0) {
+    //     read(client_socket, input, sizeof(input));
+    //     char post_name[BUFFER_SIZE];
+    //     int num;
+    //     sscanf(input, "%d", &num);
+    //     printf("%d\n", num);
 
-        //shared memory
-        int *posts;
-        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-        posts = (int *)shmat(shmid02, 0, 0);
+    //     //shared memory
+    //     int *posts;
+    //     int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+    //     posts = (int *)shmat(shmid02, 0, 0);
 
         //permission
         char pid_str[BUFFER_SIZE];
@@ -325,17 +318,17 @@ void subserver_logic(int client_socket){
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");
-    int forum = open("forum.txt",O_RDONLY);
-    // printf("%s", file_to_string("forum.txt"));
+    // int forum = open("forum.txt",O_RDONLY);
+    // // printf("%s", file_to_string("forum.txt"));
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
     int numStrings = 0;

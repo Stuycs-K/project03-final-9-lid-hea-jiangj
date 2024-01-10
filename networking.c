@@ -95,30 +95,86 @@ void err(int i, char*message){
   }
 }
 
-char* file_to_string(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (file == NULL) {
-        perror("fopen failure");
-        exit(1);
-    }
-    char* accum = malloc(BUFFER_SIZE); 
-    char line[BUFFER_SIZE]; 
+void file_to_string(const char* filename, char *accum) {
+    // FILE* file = fopen(filename, "r");
+    // if (file == NULL) {
+    //     perror("fopen failure");
+    //     exit(1);
+    // }
 
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-        if (new_content == NULL) {
-            perror("realloc error");
-            exit(1);
-        }
+    // char* accum = malloc(1); 
+    // char line[BUFFER_SIZE]; 
 
-        accum = new_content;
-        strcat(accum, line);
+    // while (fgets(line, sizeof(line), file) != NULL) {
+    //     char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
+    //     if (new_content == NULL) {
+    //         perror("realloc error");
+    //         exit(1);
+    //     }
+
+    //     accum = new_content;
+    //     strcat(accum, line);
+    // }
+
+    // fclose(file);
+    // return accum;
+    int file = open(filename, O_RDONLY, 0666);
+    char buff[BUFFER_SIZE] = "";
+    int byte;
+    while((byte = read(file, buff, BUFFER_SIZE))) {
+        strcat(accum, buff);
     }
     accum[strlen(accum)] = '\0';
-    fclose(file);
-    return accum;
+    close(file);
 }
+// char* file_to_string(const char* filename) {
+//     FILE* file = fopen(filename, "r");
+//     if (file == NULL) {
+//         perror("fopen failure");
+//         exit(1);
+//     }
+//     char* accum = malloc(BUFFER_SIZE); 
+//     char line[BUFFER_SIZE]; 
 
+//     while (fgets(line, sizeof(line), file) != NULL) {
+//         char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
+//         if (new_content == NULL) {
+//             perror("realloc error");
+//             exit(1);
+//         }
+
+//         accum = new_content;
+//         strcat(accum, line);
+//     }
+//     accum[strlen(accum)] = '\0';
+//     fclose(file);
+//     return accum;
+// }
+
+// char* file_to_string(const char* filename) {
+//     FILE* file = fopen(filename, "r");
+//     if (file == NULL) {
+//         perror("fopen failure");
+//         exit(1);
+//     }
+
+//     char* accum = malloc(1); 
+//     char line[BUFFER_SIZE]; 
+
+//     while (fgets(line, sizeof(line), file) != NULL) {
+//         char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
+//         if (new_content == NULL) {
+//             perror("realloc error");
+//             exit(1);
+//         }
+
+//         accum = new_content;
+//         strcat(accum, line);
+//     }
+
+//     fclose(file);
+//     return accum;
+// }
 // char* file_to_string2(const char* filename) {
 //     FILE* file = fopen(filename, "r");
 //     char* accum = malloc(BUFFER_SIZE);
