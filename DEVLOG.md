@@ -27,7 +27,7 @@ HW: worked on formating issues and finished name tags
 
 ### 2024-01-10 - Brief description
 CW: worked on file_to_string to work on linux servers, changed forum display to all posts rather than recent
-HW: cleaned up code and reset forum file to have files attached to each post
+HW: cleaned up code and reset forum file to have files attached to each post, started workin gon a search function, cleaned up the code
 
 ## Player 2: Derek Li
 
