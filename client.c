@@ -64,7 +64,7 @@ void clientLogic(int server_socket){
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
 
-        char content[BUFFER_SIZE];
+        char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
         printf("Current content of %s: \n%s\n", post_name, content);
 

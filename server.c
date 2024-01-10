@@ -56,7 +56,9 @@ void subserver_logic(int client_socket){
 // //        strcat(accum,"---------------------------------\n");
 //     }
 //     accum[strlen(accum)] = '\0';
-    char* accum = file_to_string("forum.txt");
+    char accum[BUFFER_SIZE] = "";
+    file_to_string("forum.txt", accum);
+    // accum = file_to_string("forum.txt");
     write(client_socket, accum, strlen(accum));
     fflush(stdin);
 
@@ -119,7 +121,8 @@ void subserver_logic(int client_socket){
         if (strlen(input) <= 3){
             char* post_name = input;
             int post = open(post_name, O_WRONLY | O_APPEND, 0666);
-            char* post_content = file_to_string(post_name);
+            char post_content[BUFFER_SIZE];
+            file_to_string(post_name, post_content);
             // int post = open(post_name, O_RDONLY, 0);
             // char post_content[BUFFER_SIZE];
             // int bytes;
@@ -176,7 +179,8 @@ void subserver_logic(int client_socket){
             write(client_socket, answer, sizeof(answer));
             sprintf(post_name, "p%d", num);
             int post = open(post_name, O_RDONLY, 0);
-            char* content = file_to_string(post_name);
+            char content[BUFFER_SIZE] = "";
+            file_to_string(post_name, content);
             printf("Current content of %s: \n%s", post_name, content);
             close(post);
 
@@ -267,12 +271,12 @@ void subserver_logic(int client_socket){
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");
