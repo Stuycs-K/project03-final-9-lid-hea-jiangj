@@ -119,8 +119,7 @@ void clientLogic(int server_socket){
         write(server_socket, pid, sizeof(pid));
         read(server_socket, input, sizeof(input));
         if(strcmp(input, "NO") != 0) {
-            char choice[BUFFER_SIZE];
-            
+            printf("File deleted\n");            
         }
         else{
             read(server_socket, input, sizeof(input));
