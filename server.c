@@ -56,7 +56,6 @@ void subserver_logic(int client_socket){
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
-    printf("accum: %s\n",accum);
     write(client_socket, accum, strlen(accum));
 //    printf("%s", accum);
     // Gets the client's command
@@ -98,7 +97,7 @@ void subserver_logic(int client_socket){
         char post_creator[BUFFER_SIZE*3];
         sprintf(post_creator, "[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
-        write(post, new_input, strlen(new_input));
+        // write(post, new_input, strlen(new_input));
         char post_content[BUFFER_SIZE*3];
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
@@ -182,7 +181,7 @@ void subserver_logic(int client_socket){
             int lineToReplace = num; // The line number to replace
             char *newLine = replacement; // The new line content
             char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"content: %s", replacement);
+            sprintf(replacement1,"p%d: %s", num, replacement);
             char *newLine1 = replacement1;
             int currentLine = 1;
 
@@ -228,7 +227,7 @@ void subserver_logic(int client_socket){
 
                 while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
                     // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == 3) {
+                    if (currentLine == 2) {
                         fputs(replacement1, tempFile);
                     } 
                     else {
