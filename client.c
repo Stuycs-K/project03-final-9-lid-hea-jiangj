@@ -200,6 +200,7 @@ int main(int argc, char *argv[] ) {
         // fclose(forum1);
         
         clientLogic(server_socket);
+        clear();
     }
 }
 

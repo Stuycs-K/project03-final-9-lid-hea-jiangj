@@ -190,3 +190,24 @@ void file_to_string(const char* filename, char *accum) {
 //     printf("accum: %s\n",accum);
 //     return accum;
 // }
+
+void clear(){
+  char* cmdsargv[32];
+  cmdsargv[0] = "clear";
+  int p = fork();
+  if(p < 0){
+    perror("fork fail");
+    exit(1);
+  }
+  else if(p == 0){
+    int status = execvp(cmdsargv[0], cmdsargv);
+    if(status == -1){
+      perror("clear fail");
+      exit(1);
+    }
+  }
+  else{
+    int status;
+    waitpid(p, &status, 0);
+  }
+}
