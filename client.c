@@ -19,7 +19,7 @@ void clientLogic(int server_socket){
 
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-    printf("%s", input);
+    printf("%s===================================================\n", input);
 
     printf("Input a command (post, view, edit, delete): ");
     fgets(input, sizeof(input), stdin);
@@ -190,7 +190,7 @@ int main(int argc, char *argv[] ) {
         //     fseek(forum1, filePos + 1, SEEK_SET);
         // }
 
-        // printf("MOST RECENT POSTS:\n===================================================\n");
+        printf("MOST RECENT POSTS:\n===================================================\n");
         // for (int i = 0;i<lineCount;i++) {
         //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
         //         printf("%s",lines[i]);
