@@ -182,7 +182,7 @@ void subserver_logic(int client_socket){
             int lineToReplace = num; // The line number to replace
             char *newLine = replacement; // The new line content
             char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"p%d: %s",num,replacement);
+            sprintf(replacement1,"content: %s", replacement);
             char *newLine1 = replacement1;
             int currentLine = 1;
 
@@ -221,14 +221,14 @@ void subserver_logic(int client_socket){
 
                 memset(buffer,0,sizeof(buffer));
                 memset(replacement1,0,sizeof(replacement1));
-                sprintf(replacement1,"p%d: %s",num,replacement);
+                sprintf(replacement1,"content: %s", replacement);
                 printf("Replacment: %s",replacement1);
 
                 currentLine = 1;
 
                 while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
                     // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == 1) {
+                    if (currentLine == 3) {
                         fputs(replacement1, tempFile);
                     } 
                     else {
