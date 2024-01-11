@@ -151,16 +151,16 @@ int main(int argc, char *argv[] ) {
         // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
 
-        //creates shared memory
-        int shmid = shmget(KEY, sizeof(int), 0640);
-        int* data = shmat(shmid, 0, 0);
+        // //creates shared memory
+        // int shmid = shmget(KEY, sizeof(int), 0640);
+        // int* data = shmat(shmid, 0, 0);
 
-        char lines[5][BUFFER_SIZE];
-        int NUM_LINES = 5;
-        int line_nums[NUM_LINES];
-        char buffer[MAX_LINE_LENGTH];
-        long filePos;
-        int lineCount = 0, targetLine = 5;
+        // char lines[5][BUFFER_SIZE];
+        // int NUM_LINES = 5;
+        // int line_nums[NUM_LINES];
+        // char buffer[MAX_LINE_LENGTH];
+        // long filePos;
+        // int lineCount = 0, targetLine = 5;
 
         // opens file
         // FILE* forum1 = fopen("forum.txt","r");
