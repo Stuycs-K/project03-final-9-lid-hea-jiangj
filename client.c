@@ -67,19 +67,24 @@ void clientLogic(int server_socket){
 
         char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
-        printf("Current content of %s: \n%s\n", post_name, content);
+        clear();
+        printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
 
         // Prompt for reply
         printf("Input a command (reply, back): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
         if (strcmp(input, "reply") == 0) {
             printf("Input a reply: ");
             fgets(input, sizeof(input), stdin);
+            printf("===================================================\n");
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
+            // read(server_socket, input, sizeof(input));
+            // printf
         }
 
     }
@@ -104,6 +109,7 @@ void clientLogic(int server_socket){
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
+            sleep(1);
         }
     }
     else if(strcmp(input, "delete") == 0){

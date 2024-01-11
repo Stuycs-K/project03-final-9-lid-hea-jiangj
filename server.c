@@ -124,6 +124,8 @@ void subserver_logic(int client_socket){
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
+                // file_to_string(post_name, post_content);
+                // write(client_socket, post_content, strlen(post_content));
             }
             else if (strcmp(input, "back") == 0){
 
@@ -158,7 +160,7 @@ void subserver_logic(int client_socket){
         if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
-            char reply[BUFFER_SIZE] = "You do not have permission to edit this post!\n";
+            char reply[BUFFER_SIZE] = "===================================================\n\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
         else{
