@@ -34,19 +34,22 @@ static void sighandler( int signo ) {
 }
 
 
-void search_file(const char* filename, char* string) {
-    int file = open(filename, O_RDONLY, 0666);
+char* search_file(const char* filename, char* string) {
+    FILE *file = fopen("forum.txt", "r");
     char buff[BUFFER_SIZE] = "";
     char new_string[BUFFER_SIZE] = "";
     int byte;
-    while((byte = read(file, buff, BUFFER_SIZE))) {
+    while (fgets(buff, BUFFER_SIZE, file) != NULL) {
+//        printf("line: %s [%s]", buff, strstr(buff, string));
         if (strstr(buff, string) != NULL){
             strcat(new_string, buff);
         }
     }
     new_string[strlen(new_string)] = '\0';
-    close(file);
+    fclose(file);
+    return new_string;
 }
+
 
 void subserver_logic(int client_socket){
     char clientPID[BUFFER_SIZE+12];
@@ -56,7 +59,6 @@ void subserver_logic(int client_socket){
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
-    printf("accum: %s\n",accum);
     write(client_socket, accum, strlen(accum));
 //    printf("%s", accum);
     // Gets the client's command
@@ -98,7 +100,7 @@ void subserver_logic(int client_socket){
         char post_creator[BUFFER_SIZE*3];
         sprintf(post_creator, "[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
-        write(post, new_input, strlen(new_input));
+        // write(post, new_input, strlen(new_input));
         char post_content[BUFFER_SIZE*3];
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
@@ -125,6 +127,8 @@ void subserver_logic(int client_socket){
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
+                // file_to_string(post_name, post_content);
+                // write(client_socket, post_content, strlen(post_content));
             }
             else if (strcmp(input, "back") == 0){
 
@@ -159,7 +163,7 @@ void subserver_logic(int client_socket){
         if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
-            char reply[BUFFER_SIZE] = "You do not have permission to edit this post!\n";
+            char reply[BUFFER_SIZE] = "===================================================\n\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
         else{
@@ -182,10 +186,9 @@ void subserver_logic(int client_socket){
             int lineToReplace = num; // The line number to replace
             char *newLine = replacement; // The new line content
             char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"p%d: %s",num,replacement);
+            sprintf(replacement1,"p%d: %s", num, replacement);
             char *newLine1 = replacement1;
             int currentLine = 1;
-
             if (strcmp(choice,"title\n")==0) {
                 file = fopen("forum.txt", "r");
                 tempFile = fopen("temp.txt", "w");
@@ -221,14 +224,14 @@ void subserver_logic(int client_socket){
 
                 memset(buffer,0,sizeof(buffer));
                 memset(replacement1,0,sizeof(replacement1));
-                sprintf(replacement1,"p%d: %s",num,replacement);
+                sprintf(replacement1,"content: %s", replacement);
                 printf("Replacment: %s",replacement1);
 
                 currentLine = 1;
 
                 while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
                     // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == 1) {
+                    if (currentLine == 2) {
                         fputs(replacement1, tempFile);
                     } 
                     else {
@@ -318,8 +321,18 @@ void subserver_logic(int client_socket){
             // Delete the original file and rename the temporary file to the original file name
             remove("forum.txt");
             rename("temp.txt", "forum.txt");
-            }
         }
+    }
+    else if(strcmp(input, "search") == 0){
+        char keyword[BUFFER_SIZE];
+        read(client_socket, keyword, sizeof(keyword));
+        keyword[strlen(keyword)] = '\0';
+        printf("keyword:[%s] length:[%lu]", keyword, strlen(keyword));
+        char* filtered = search_file("forum.txt", keyword);
+        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
+        
+        write(client_socket, filtered, strlen(filtered));
+    }
     else {
         printf("Not a valid command!\n");
     }
@@ -328,14 +341,16 @@ void subserver_logic(int client_socket){
 
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
+    char* new_string = search_file("forum.txt", "post");
+    printf("%s", new_string);
     printf("SERVER ONLINE\n===================================================\n");
     // int forum = open("forum.txt",O_RDONLY);
     // // printf("%s", file_to_string("forum.txt"));

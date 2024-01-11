@@ -1,7 +1,30 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
 
-void clientLogic(int server_socket){
+int filtered = 0;
+
+static void sighandler( int signo ) {
+    if (signo == SIGINT) {
+        //removing semaphore
+        int semd;
+        semd = semget(KEY, 1, 0);
+        semctl(semd, IPC_RMID, 0);
+       
+        //removing shared memory
+        int shmid;
+        shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+        shmctl(shmid, IPC_RMID, 0);
+
+        int shmid02;
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        shmctl(shmid02, IPC_RMID, 0);
+
+        printf("SEGMENT & SHARED MEMORY REMOVED\n");
+        exit(0);
+    }
+}
+void clientLogic(int server_socket, int filtered){
+//    printf("clientLogic reached\n");
 //    while(1){
     // Prompts the user for a string.
     char pid_str[BUFFER_SIZE];
@@ -19,9 +42,11 @@ void clientLogic(int server_socket){
 
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-    printf("%s", input);
+    if (filtered == 0){
+        printf("%s===================================================\n", input);
+    }
 
-    printf("Input a command (post, view, edit, delete): ");
+    printf("Input a command (post, view, edit, delete, search): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -67,21 +92,25 @@ void clientLogic(int server_socket){
 
         char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
-        printf("Current content of %s: \n%s\n", post_name, content);
+        clear();
+        printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
 
         // Prompt for reply
         printf("Input a command (reply, back): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
         if (strcmp(input, "reply") == 0) {
             printf("Input a reply: ");
             fgets(input, sizeof(input), stdin);
+            printf("===================================================\n");
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
+            // read(server_socket, input, sizeof(input));
+            // printf
         }
-
     }
     else if(strcmp(input, "edit") == 0){
         char pid[BUFFER_SIZE];
@@ -104,6 +133,7 @@ void clientLogic(int server_socket){
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
+            sleep(1);
         }
     }
     else if(strcmp(input, "delete") == 0){
@@ -126,6 +156,16 @@ void clientLogic(int server_socket){
             read(server_socket, input, sizeof(input));
             printf("%s", input);
         }
+    }    
+    else if(strcmp(input, "search") == 0){
+        printf("what keyword would you like to search: ");
+        fgets(input, sizeof(input), stdin);
+        input[strlen(input)-1] = '\0';
+        write(server_socket, input, sizeof(input));
+        char filtered[BUFFER_SIZE] = "";
+        read(server_socket, filtered, sizeof(filtered));
+        printf("results with [%s]: \n%s\n", input, filtered);
+        clientLogic(server_socket, 1);
     }
     else {
         printf("Not a valid command!\n");
@@ -139,7 +179,7 @@ void clientLogic(int server_socket){
 
 
 int main(int argc, char *argv[] ) {
-    
+//    printf("client online \n");
     // checks for the IP of the server the client should connect to
     char* IP = NULL;
     if(argc>1){
@@ -151,16 +191,16 @@ int main(int argc, char *argv[] ) {
         // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
 
-        //creates shared memory
-        int shmid = shmget(KEY, sizeof(int), 0640);
-        int* data = shmat(shmid, 0, 0);
+        // //creates shared memory
+        // int shmid = shmget(KEY, sizeof(int), 0640);
+        // int* data = shmat(shmid, 0, 0);
 
-        char lines[5][BUFFER_SIZE];
-        int NUM_LINES = 5;
-        int line_nums[NUM_LINES];
-        char buffer[MAX_LINE_LENGTH];
-        long filePos;
-        int lineCount = 0, targetLine = 5;
+        // char lines[5][BUFFER_SIZE];
+        // int NUM_LINES = 5;
+        // int line_nums[NUM_LINES];
+        // char buffer[MAX_LINE_LENGTH];
+        // long filePos;
+        // int lineCount = 0, targetLine = 5;
 
         // opens file
         // FILE* forum1 = fopen("forum.txt","r");
@@ -190,7 +230,7 @@ int main(int argc, char *argv[] ) {
         //     fseek(forum1, filePos + 1, SEEK_SET);
         // }
 
-        // printf("MOST RECENT POSTS:\n===================================================\n");
+        printf("MOST RECENT POSTS:\n===================================================\n");
         // for (int i = 0;i<lineCount;i++) {
         //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
         //         printf("%s",lines[i]);
@@ -199,7 +239,8 @@ int main(int argc, char *argv[] ) {
         // printf("===================================================\n");
         // fclose(forum1);
         
-        clientLogic(server_socket);
+        clientLogic(server_socket, 0);
+        clear();
     }
 }
 
