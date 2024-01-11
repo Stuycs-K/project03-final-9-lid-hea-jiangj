@@ -182,10 +182,9 @@ void subserver_logic(int client_socket){
             int lineToReplace = num; // The line number to replace
             char *newLine = replacement; // The new line content
             char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"content: %s", replacement);
+            sprintf(replacement1,"p%d: %s", num, replacement);
             char *newLine1 = replacement1;
             int currentLine = 1;
-
             if (strcmp(choice,"title\n")==0) {
                 file = fopen("forum.txt", "r");
                 tempFile = fopen("temp.txt", "w");
