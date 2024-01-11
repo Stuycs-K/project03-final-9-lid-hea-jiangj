@@ -24,7 +24,7 @@ static void sighandler( int signo ) {
     }
 }
 void clientLogic(int server_socket, int filtered){
-    printf("clientLogic reached\n");
+//    printf("clientLogic reached\n");
 //    while(1){
     // Prompts the user for a string.
     char pid_str[BUFFER_SIZE];
@@ -164,7 +164,7 @@ void clientLogic(int server_socket, int filtered){
         write(server_socket, input, sizeof(input));
         char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
-        printf("results with ['%s']: \n%s\n", input, filtered);
+        printf("results with [%s]: \n%s\n", input, filtered);
         clientLogic(server_socket, 1);
     }
     else {
@@ -179,7 +179,7 @@ void clientLogic(int server_socket, int filtered){
 
 
 int main(int argc, char *argv[] ) {
-    printf("client online \n");
+//    printf("client online \n");
     // checks for the IP of the server the client should connect to
     char* IP = NULL;
     if(argc>1){
