@@ -7,10 +7,25 @@
 volatile sig_atomic_t exit_flag = 0;
 int scroll_position = -1; // Global variable for tracking scroll position
 
+void cleanup_and_exit(int exit_code) {
+    endwin(); // Restore the terminal to its normal state
+    exit(exit_code);
+}
+
 void sig_handler(int signo) {
     if (signo == SIGINT) {
         exit_flag = 1;
+        cleanup_and_exit(0); // Clean exit
     }
+    else if (signo == SIGSEGV) {
+        fprintf(stderr, "Caught signal %d\n", signo);
+        cleanup_and_exit(1); // Clean exit
+    }
+}
+
+void universal_signal_handler(int signo) {
+    fprintf(stderr, "Caught signal %d (%s)\n", signo, strsignal(signo));
+    exit(1);
 }
 
 void display_last_five_lines() {
@@ -97,9 +112,9 @@ void clientLogic(int server_socket){
             input_pos--;
             input[input_pos] = '\0';
             // Clear and redraw the line
-            move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            // move(getcury(stdscr), 0); // Move cursor to the start of the current line
             clrtoeol(); // Clear the line
-            printw("%s%s", prompt, input); // Redraw the prompt and the input
+            printw("\b"); // Redraw the prompt and the input
             move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
             refresh();
         }
@@ -107,11 +122,11 @@ void clientLogic(int server_socket){
             // Handling character input
             input[input_pos] = ch;
             input_pos++;
-            // Redraw the input
-            move(getcury(stdscr), 0); // Move cursor to the start of the current line
-            clrtoeol(); // Clear the line
-            printw("%s%s", prompt, input); // Redraw the prompt and the input
-            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            // // Redraw the input
+            // move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            // clrtoeol(); // Clear the line
+            printw("%c", input[input_pos]); // Redraw the prompt and the input
+            // move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
             refresh();
         }
     }
@@ -128,7 +143,14 @@ void clientLogic(int server_socket){
         printw("Semaphore Does Not Yet Exist\n");
         exit(1);
     }
-    write(server_socket, input, sizeof(input));
+
+    // memset(input, 0, sizeof(input));
+    // read(server_socket, input, sizeof(input));
+    // printw("%s", input);
+
+    
+    // printf("About to write\n");
+    write(server_socket,input,sizeof(input));
     // printf("If statement about to run\n");
     // uping semaphore
 //    printf("Connecting to Server... This may take a moment.\n");
@@ -137,28 +159,51 @@ void clientLogic(int server_socket){
     sb.sem_flg = SEM_UNDO;
     sb.sem_op = -1;
     semop(semd, &sb, 1);
-    if (strcmp(input,"post")==0) {
+    if (strcmp(input, "post") == 0) {
+        memset(input, 0, sizeof(input));
         char content[BUFFER_SIZE];
-        // char pid_str[BUFFER_SIZE];
-        // int pid_int = getpid();
-        printw("pid: %d\n", pid_int);
-        // sprintf(pid_str, "%d", pid_int);
+        memset(content, 0, sizeof(content));
+        clrtoeol(); // Clear the line
         printw("Enter the title of your post: ");
+        refresh();
         getstr(input);
+        strcat(input, "\n");
+        printw("input: %s",input);
+        refresh();
         printw("Enter the content of your post: ");
+        refresh();
         getstr(content);
-        // printf("fgets: %s\n",input);
-        // Send the user input to the client.
-        write(server_socket, input, sizeof(input));
+        strcat(content, "\n");
+        printw("content: %s",content);
+        refresh();
+        fflush(stdout);
+
+        // Check if the socket is still valid
+        if (server_socket < 0) {
+            printw("Socket error before sending data.\n");
+            refresh();
+            return;
+        }
+
+        // Attempt to write the data
+        write(server_socket, input, sizeof(input)); 
+        refresh();
         write(server_socket, content, sizeof(content));
+        refresh();
+
         write(server_socket, pid_str, sizeof(pid_str));
+        refresh();
+
+        printw("Post sent successfully.\n");
+        refresh();
+    }
     // Read the modified string from the server
     // read(server_socket, input, sizeof(input));
 
 
     // Prints the modified string
     //        printf("%s", input);
-    }
+    
     else if (strcmp(input, "view") == 0) {
         printw("Which post would you like to view? (# only): ");
         getstr(input);
@@ -168,7 +213,7 @@ void clientLogic(int server_socket){
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
 
-        char content[BUFFER_SIZE];
+        char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
         printw("Current content of %s: \n%s\n", post_name, content);
 
@@ -201,100 +246,205 @@ void clientLogic(int server_socket){
             printw("You do not have permission to edit this post!\n");
         }
         else{
-        sprintf(post_name, "p%d", num);
-        int post = open(post_name, O_RDONLY, 0);
-        char* content = file_to_string(post_name);
-        printw("Current content of %s: \n%s", post_name, content);
-        close(post);
-        printw("Would you like to edit the title or content of this post (title, content): ");
-        char choice[BUFFER_SIZE];
-        getstr(choice);
-        printw("What would you like to replace it with: ");
-        char replacement[BUFFER_SIZE];
-        getstr(replacement);
+            sprintf(post_name, "p%d", num);
+            int post = open(post_name, O_RDONLY, 0);
+            char* content;
+            file_to_string(post_name,content);
+            printw("Current content of %s: \n%s", post_name, content);
+            close(post);
+            printw("Would you like to edit the title or content of this post (title, content): ");
+            char choice[BUFFER_SIZE];
+            getstr(choice);
+            printw("What would you like to replace it with: ");
+            char replacement[BUFFER_SIZE];
+            getstr(replacement);
 
-        FILE *file, *tempFile;
-        char buffer[BUFFER_SIZE];
-        int lineToReplace = num; // The line number to replace
-        char *newLine = replacement; // The new line content
-        char replacement1[BUFFER_SIZE+10];
-        sprintf(replacement1,"p%d: %s",num,replacement);
-        char *newLine1 = replacement1;
-        int currentLine = 1;
-
-        if (strcmp(choice,"title\n")==0) {
-            file = fopen("forum.txt", "r");
-            tempFile = fopen("temp.txt", "w");
-
-            if (file == NULL || tempFile == NULL) {
-                perror("Error opening file!\n");
-            }
-
-            // Read from the original file and write to the temporary file
-            while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-                // If the current line is the line to replace, write the new line to the temp file
-                if (currentLine == lineToReplace) {
-                    fputs(newLine1, tempFile);
-                } else {
-                    // Otherwise, write the original line
-                    fputs(buffer, tempFile);
-                }
-                currentLine++;
-            }
-
-            // Close the files
-            fclose(file);
-            fclose(tempFile);
-
-            // Delete the original file and rename the temporary file to the original file name
-            remove("forum.txt");
-            rename("temp.txt", "forum.txt");
-        }
-        
-        else if (strcmp(choice,"content\n")==0) {
-            FILE * pFile = fopen(post_name, "r");
-            tempFile = fopen("temp.txt", "w");
-
-            memset(buffer,0,sizeof(buffer));
-            memset(replacement1,0,sizeof(replacement1));
+            FILE *file, *tempFile;
+            char buffer[BUFFER_SIZE];
+            int lineToReplace = num; // The line number to replace
+            char *newLine = replacement; // The new line content
+            char replacement1[BUFFER_SIZE+10];
             sprintf(replacement1,"p%d: %s",num,replacement);
-            printw("Replacment: %s",replacement1);
+            char *newLine1 = replacement1;
+            int currentLine = 1;
 
+            if (strcmp(choice,"title\n")==0) {
+                file = fopen("forum.txt", "r");
+                tempFile = fopen("temp.txt", "w");
 
-            currentLine = 1;
-
-            while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
-                // If the current line is the line to replace, write the new line to the temp file
-                if (currentLine == 1) {
-                    fputs(replacement1, tempFile);
-                } else {
-                    // Otherwise, write the original line
-                    fputs(buffer, tempFile);
+                if (file == NULL || tempFile == NULL) {
+                    perror("Error opening file!\n");
                 }
-                currentLine++;
+
+                // Read from the original file and write to the temporary file
+                while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == lineToReplace) {
+                        fputs(newLine1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                // Close the files
+                fclose(file);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove("forum.txt");
+                rename("temp.txt", "forum.txt");
             }
+            
+            else if (strcmp(choice,"content\n")==0) {
+                FILE * pFile = fopen(post_name, "r");
+                tempFile = fopen("temp.txt", "w");
 
-            fclose(pFile);
-            fclose(tempFile);
+                memset(buffer,0,sizeof(buffer));
+                memset(replacement1,0,sizeof(replacement1));
+                sprintf(replacement1,"p%d: %s",num,replacement);
+                printw("Replacment: %s",replacement1);
 
-            // Delete the original file and rename the temporary file to the original file name
-            remove(post_name);
-            rename("temp.txt", post_name);
+
+                currentLine = 1;
+
+                while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == 1) {
+                        fputs(replacement1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                fclose(pFile);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove(post_name);
+                rename("temp.txt", post_name);
+            }
+            else {
+                printw("Not a valid command!\n");
+            }
+            }
         }
-        else {
-            printw("Not a valid command!\n");
+    else if(strcmp(input, "delete") == 0){
+        char post_name[BUFFER_SIZE];
+        int num;
+        //make sure user has permissions
+        
+        //delete post file
+        //delete title from forum.txt
+        //down data by 1
+        char pid[BUFFER_SIZE];
+        printf("Which post would you like to delete?(# only): ");
+        fgets(input, sizeof(input), stdin);
+        write(server_socket, input, sizeof(input));
+        sprintf(pid, "%d", getpid());
+        write(server_socket, pid, sizeof(pid));
+        read(server_socket, input, sizeof(input));
+        if(strcmp(input, "NO") != 0) {
+            printf("File deleted\n");            
+        }
+        else{
+            sprintf(post_name, "p%d", num);
+            int post = open(post_name, O_RDONLY, 0);
+            char* content;
+            file_to_string(post_name,content);
+            printw("Current content of %s: \n%s", post_name, content);
+            close(post);
+            printw("Would you like to edit the title or content of this post (title, content): ");
+            char choice[BUFFER_SIZE];
+            getstr(choice);
+            printw("What would you like to replace it with: ");
+            char replacement[BUFFER_SIZE];
+            getstr(replacement);
+
+            FILE *file, *tempFile;
+            char buffer[BUFFER_SIZE];
+            int lineToReplace = num; // The line number to replace
+            char *newLine = replacement; // The new line content
+            char replacement1[BUFFER_SIZE+10];
+            sprintf(replacement1,"p%d: %s",num,replacement);
+            char *newLine1 = replacement1;
+            int currentLine = 1;
+
+            if (strcmp(choice,"title\n")==0) {
+                file = fopen("forum.txt", "r");
+                tempFile = fopen("temp.txt", "w");
+
+                if (file == NULL || tempFile == NULL) {
+                    perror("Error opening file!\n");
+                }
+
+                // Read from the original file and write to the temporary file
+                while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == lineToReplace) {
+                        fputs(newLine1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                // Close the files
+                fclose(file);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove("forum.txt");
+                rename("temp.txt", "forum.txt");
+            }
+            
+            else if (strcmp(choice,"content\n")==0) {
+                FILE * pFile = fopen(post_name, "r");
+                tempFile = fopen("temp.txt", "w");
+
+                memset(buffer,0,sizeof(buffer));
+                memset(replacement1,0,sizeof(replacement1));
+                sprintf(replacement1,"p%d: %s",num,replacement);
+                printw("Replacment: %s",replacement1);
+
+
+                currentLine = 1;
+
+                while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == 1) {
+                        fputs(replacement1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                fclose(pFile);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove(post_name);
+                rename("temp.txt", post_name);
+            }
+            else {
+                printw("Not a valid command!\n");
+            }
         }
         }
-        }
-    else if (strcmp(input, "exit") == 0) {
-        exit_flag = 1;  // Set the exit flag to break the main loop
-    }
     else {
         printw("Not a valid command!\n");
     }
     //downing semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
+    printf("\n");
+
 }
 
 
@@ -351,7 +501,13 @@ void* key_listener(void* p) {
 //         fclose(forum1);
 
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[] ) {
+    for (int i = 1; i < NSIG; i++) {
+        signal(i, universal_signal_handler);
+    }
+    signal(SIGSEGV, sig_handler);  // Catch segmentation fault
+
+    // checks for the IP of the server the client should connect to
     char* IP = NULL;
     initscr();
     cbreak();
@@ -362,17 +518,67 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         IP = argv[1];
     }
+        // char line[BUFFER_SIZE];
+        // // connect to the server through IP
+        // int server_socket = client_tcp_handshake(IP);
 
-    int server_socket = client_tcp_handshake(IP);
+        // //creates shared memory
+        // int shmid = shmget(KEY, sizeof(int), 0640);
+        // int* data = shmat(shmid, 0, 0);
+
+        // char lines[5][BUFFER_SIZE];
+        // int NUM_LINES = 5;
+        // int line_nums[NUM_LINES];
+        // char buffer[MAX_LINE_LENGTH];
+        // long filePos;
+        // int lineCount = 0, targetLine = 5;
+
+        // opens file
+        // FILE* forum1 = fopen("forum.txt","r");
+        // if (forum1 == NULL) {
+        //     perror("Error opening file");
+        //     return 1;
+        // }
+
+        // // Seek to the end of the file
+        // fseek(forum1, 0, SEEK_END);
+        // filePos = ftell(forum1);
+
+        // // Move backwards through the file to find the 5th last newline
+        // while (lineCount < targetLine && filePos >= 0) {
+        //     fseek(forum1, --filePos, SEEK_SET);
+        //     if (fgetc(forum1) == '\n') {
+        //         lineCount++;
+        //     }
+        // }
+
+        // // Read and print the last 5 lines
+        // if (lineCount < targetLine) {
+        //     // The file has less than 5 lines, so go to the start
+        //     fseek(forum1, 0, SEEK_SET);
+        // } else {
+        //     // Go to the start of the line
+        //     fseek(forum1, filePos + 1, SEEK_SET);
+        // }
+
+        // printf("MOST RECENT POSTS:\n===================================================\n");
+        // for (int i = 0;i<lineCount;i++) {
+        //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+        //         printf("%s",lines[i]);
+        //     }
+        // }
+        // printf("===================================================\n");
+        // fclose(forum1);
+        
 
     while (!exit_flag) {
+        int server_socket = client_tcp_handshake(IP);
         display_last_five_lines();
-        char input[BUFFER_SIZE];
         clientLogic(server_socket);
     }
-
+    printw("closed client\n");
+    refresh();
     endwin();
-    close(server_socket);
     return 0;
 }
 
