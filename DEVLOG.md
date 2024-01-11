@@ -96,3 +96,5 @@ HW: Spent like 4 hours working on ncurses and changed stuff like printf to print
 
 ### 2024-01-10 - Brief description
 CW: Discussed ncurses with Mr. K. Got delete feature to work.
+
+HW: Polished delete feature, made sure data (# of posts) was decremented as a post was deleted. Fixed problem with how forum wouldn't be updated to the client after deleting a post. Used waitpid(). Worked on merging main with ncurses in the extra branch. Plan to merge the extra branch with main after essentials of project are done. On extra branch worked on fixing errors that came from merging. Fixed write/read errors from client and typing errors.
