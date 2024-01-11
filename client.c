@@ -1,7 +1,30 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
 
-void clientLogic(int server_socket){
+int filtered = 0;
+
+static void sighandler( int signo ) {
+    if (signo == SIGINT) {
+        //removing semaphore
+        int semd;
+        semd = semget(KEY, 1, 0);
+        semctl(semd, IPC_RMID, 0);
+       
+        //removing shared memory
+        int shmid;
+        shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+        shmctl(shmid, IPC_RMID, 0);
+
+        int shmid02;
+        shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        shmctl(shmid02, IPC_RMID, 0);
+
+        printf("SEGMENT & SHARED MEMORY REMOVED\n");
+        exit(0);
+    }
+}
+void clientLogic(int server_socket, int filtered){
+    printf("clientLogic reached\n");
 //    while(1){
     // Prompts the user for a string.
     char pid_str[BUFFER_SIZE];
@@ -19,9 +42,11 @@ void clientLogic(int server_socket){
 
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
-    printf("%s", input);
+    if (filtered == 0){
+        printf("%s", input);
+    }
 
-    printf("Input a command (post, view, edit, delete): ");
+    printf("Input a command (post, view, edit, delete, search): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -81,7 +106,6 @@ void clientLogic(int server_socket){
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
         }
-
     }
     else if(strcmp(input, "edit") == 0){
         char pid[BUFFER_SIZE];
@@ -126,6 +150,16 @@ void clientLogic(int server_socket){
             read(server_socket, input, sizeof(input));
             printf("%s", input);
         }
+    }    
+    else if(strcmp(input, "search") == 0){
+        printf("what keyword would you like to search: ");
+        fgets(input, sizeof(input), stdin);
+        input[strlen(input)-1] = '\0';
+        write(server_socket, input, sizeof(input));
+        char filtered[BUFFER_SIZE] = "";
+        read(server_socket, filtered, sizeof(filtered));
+        printf("results with ['%s']: \n%s\n", input, filtered);
+        clientLogic(server_socket, 1);
     }
     else {
         printf("Not a valid command!\n");
@@ -139,7 +173,7 @@ void clientLogic(int server_socket){
 
 
 int main(int argc, char *argv[] ) {
-    
+    printf("client online \n");
     // checks for the IP of the server the client should connect to
     char* IP = NULL;
     if(argc>1){
@@ -199,7 +233,7 @@ int main(int argc, char *argv[] ) {
         // printf("===================================================\n");
         // fclose(forum1);
         
-        clientLogic(server_socket);
+        clientLogic(server_socket, 0);
     }
 }
 

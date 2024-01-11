@@ -34,19 +34,22 @@ static void sighandler( int signo ) {
 }
 
 
-void search_file(const char* filename, char* string) {
-    int file = open(filename, O_RDONLY, 0666);
+char* search_file(const char* filename, char* string) {
+    FILE *file = fopen("forum.txt", "r");
     char buff[BUFFER_SIZE] = "";
     char new_string[BUFFER_SIZE] = "";
     int byte;
-    while((byte = read(file, buff, BUFFER_SIZE))) {
+    while (fgets(buff, BUFFER_SIZE, file) != NULL) {
+//        printf("line: %s [%s]", buff, strstr(buff, string));
         if (strstr(buff, string) != NULL){
             strcat(new_string, buff);
         }
     }
     new_string[strlen(new_string)] = '\0';
-    close(file);
+    fclose(file);
+    return new_string;
 }
+
 
 void subserver_logic(int client_socket){
     char clientPID[BUFFER_SIZE+12];
@@ -56,7 +59,7 @@ void subserver_logic(int client_socket){
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
-    printf("accum: %s\n",accum);
+//    printf("accum: %s\n",accum);
     write(client_socket, accum, strlen(accum));
 //    printf("%s", accum);
     // Gets the client's command
@@ -318,8 +321,18 @@ void subserver_logic(int client_socket){
             // Delete the original file and rename the temporary file to the original file name
             remove("forum.txt");
             rename("temp.txt", "forum.txt");
-            }
         }
+    }
+    else if(strcmp(input, "search") == 0){
+        char keyword[BUFFER_SIZE];
+        read(client_socket, keyword, sizeof(keyword));
+        keyword[strlen(keyword)] = '\0';
+        printf("keyword:[%s] length:[%lu]", keyword, strlen(keyword));
+        char* filtered = search_file("forum.txt", keyword);
+        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
+        
+        write(client_socket, filtered, strlen(filtered));
+    }
     else {
         printf("Not a valid command!\n");
     }
@@ -328,14 +341,16 @@ void subserver_logic(int client_socket){
 
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 int main(int argc, char *argv[] ) {
+    char* new_string = search_file("forum.txt", "post");
+    printf("%s", new_string);
     printf("SERVER ONLINE\n===================================================\n");
     // int forum = open("forum.txt",O_RDONLY);
     // // printf("%s", file_to_string("forum.txt"));
