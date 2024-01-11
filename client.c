@@ -77,26 +77,13 @@ void display_last_five_lines() {
     fclose(file);
 }
 
-void clientLogic(int server_socket){
-    char pid_str[BUFFER_SIZE];
-    int ch;
-    int input_pos = 0;
-    int pid_int = getpid();
-    sprintf(pid_str, "%d", pid_int);
-    write(server_socket, pid_str, sizeof(pid_str));
-
-    char input[BUFFER_SIZE];
-    memset(input, 0, sizeof(input));
-    input_pos = 0;
-
-    char prompt[] = "Input a command (post, view, edit, exit): ";
+void prompt_and_input(char prompt[], char input[], int input_pos) {
     int prompt_len = strlen(prompt);
     printw("%s",prompt);
     int prompt_end_pos = getcurx(stdscr); // Store the cursor position at the end of the prompt
     refresh();
-    
-    
 
+    int ch;
     while ((ch = getch()) != '\n') {
         if (ch == KEY_UP || ch == KEY_DOWN) {
             // Handling scrolling
@@ -131,6 +118,22 @@ void clientLogic(int server_socket){
         }
     }
     input[input_pos] = '\0'; // Null-terminate the input string
+}
+
+void clientLogic(int server_socket){
+    char pid_str[BUFFER_SIZE];
+    int ch;
+    int input_pos = 0;
+    int pid_int = getpid();
+    sprintf(pid_str, "%d", pid_int);
+    write(server_socket, pid_str, sizeof(pid_str));
+
+    char input[BUFFER_SIZE];
+    memset(input, 0, sizeof(input));
+    input_pos = 0;
+    char prompt[] = "Input a command (post, view, edit, exit): ";
+
+    prompt_and_input(prompt,input,input_pos);
 
     if (strcmp(input, "exit") == 0) {
         exit_flag = 1;
@@ -205,18 +208,27 @@ void clientLogic(int server_socket){
     //        printf("%s", input);
     
     else if (strcmp(input, "view") == 0) {
-        printw("Which post would you like to view? (# only): ");
-        getstr(input);
+        char prompt[] = "Which post would you like to view? (# only): ";
+        char input[BUFFER_SIZE];
+        memset(input, 0, sizeof(input));
+        input_pos = 0;
+        prompt_and_input(prompt,input,input_pos);
         int num;
         sscanf(input, "%d", &num);
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
 
-        char content[BUFFER_SIZE] = "";
+        char content[BUFFER_SIZE];
+        memset(content, 0, sizeof(content));
         read(server_socket, content, sizeof(content));
-        printw("Current content of %s: \n%s\n", post_name, content);
-
+        printw("content: %s",content);
+        refresh();
+        fflush(stdout);
+        printw("Current content of %s: \n", post_name);
+        refresh();
+        printw("%s\n",content);
+        refresh();
         // Prompt for reply
         printw("Input a command (reply, back): ");
         getstr(input);
