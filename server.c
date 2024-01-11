@@ -59,7 +59,6 @@ void subserver_logic(int client_socket){
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
-//    printf("accum: %s\n",accum);
     write(client_socket, accum, strlen(accum));
 //    printf("%s", accum);
     // Gets the client's command
@@ -101,7 +100,7 @@ void subserver_logic(int client_socket){
         char post_creator[BUFFER_SIZE*3];
         sprintf(post_creator, "[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
-        write(post, new_input, strlen(new_input));
+        // write(post, new_input, strlen(new_input));
         char post_content[BUFFER_SIZE*3];
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
@@ -128,6 +127,8 @@ void subserver_logic(int client_socket){
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
+                // file_to_string(post_name, post_content);
+                // write(client_socket, post_content, strlen(post_content));
             }
             else if (strcmp(input, "back") == 0){
 
@@ -162,7 +163,7 @@ void subserver_logic(int client_socket){
         if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
-            char reply[BUFFER_SIZE] = "You do not have permission to edit this post!\n";
+            char reply[BUFFER_SIZE] = "===================================================\n\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
         else{
@@ -185,10 +186,9 @@ void subserver_logic(int client_socket){
             int lineToReplace = num; // The line number to replace
             char *newLine = replacement; // The new line content
             char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"content: %s", replacement);
+            sprintf(replacement1,"p%d: %s", num, replacement);
             char *newLine1 = replacement1;
             int currentLine = 1;
-
             if (strcmp(choice,"title\n")==0) {
                 file = fopen("forum.txt", "r");
                 tempFile = fopen("temp.txt", "w");
@@ -231,7 +231,7 @@ void subserver_logic(int client_socket){
 
                 while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
                     // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == 3) {
+                    if (currentLine == 2) {
                         fputs(replacement1, tempFile);
                     } 
                     else {

@@ -43,7 +43,7 @@ void clientLogic(int server_socket, int filtered){
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
     if (filtered == 0){
-        printf("%s", input);
+        printf("%s===================================================\n", input);
     }
 
     printf("Input a command (post, view, edit, delete, search): ");
@@ -92,19 +92,24 @@ void clientLogic(int server_socket, int filtered){
 
         char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
-        printf("Current content of %s: \n%s\n", post_name, content);
+        clear();
+        printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
 
         // Prompt for reply
         printf("Input a command (reply, back): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
         if (strcmp(input, "reply") == 0) {
             printf("Input a reply: ");
             fgets(input, sizeof(input), stdin);
+            printf("===================================================\n");
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
+            // read(server_socket, input, sizeof(input));
+            // printf
         }
     }
     else if(strcmp(input, "edit") == 0){
@@ -128,6 +133,7 @@ void clientLogic(int server_socket, int filtered){
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
+            sleep(1);
         }
     }
     else if(strcmp(input, "delete") == 0){
@@ -224,7 +230,7 @@ int main(int argc, char *argv[] ) {
         //     fseek(forum1, filePos + 1, SEEK_SET);
         // }
 
-        // printf("MOST RECENT POSTS:\n===================================================\n");
+        printf("MOST RECENT POSTS:\n===================================================\n");
         // for (int i = 0;i<lineCount;i++) {
         //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
         //         printf("%s",lines[i]);
@@ -234,6 +240,7 @@ int main(int argc, char *argv[] ) {
         // fclose(forum1);
         
         clientLogic(server_socket, 0);
+        clear();
     }
 }
 
