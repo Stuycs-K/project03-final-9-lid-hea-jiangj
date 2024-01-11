@@ -56,10 +56,9 @@ void subserver_logic(int client_socket){
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
+    printf("accum: %s\n",accum);
     write(client_socket, accum, strlen(accum));
 //    printf("%s", accum);
-    fflush(stdin);
-
     // Gets the client's command
     char input[BUFFER_SIZE];
     read(client_socket, input, sizeof(input));
@@ -251,17 +250,17 @@ void subserver_logic(int client_socket){
             }
         }
     }
-    // else if(strcmp(input,"delete")==0) {
-    //     read(client_socket, input, sizeof(input));
-    //     char post_name[BUFFER_SIZE];
-    //     int num;
-    //     sscanf(input, "%d", &num);
-    //     printf("%d\n", num);
+    else if(strcmp(input,"delete")==0) {
+        read(client_socket, input, sizeof(input));
+        char post_name[BUFFER_SIZE];
+        int num;
+        sscanf(input, "%d", &num);
+        printf("%d\n", num);
 
-    //     //shared memory
-    //     int *posts;
-    //     int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
-    //     posts = (int *)shmat(shmid02, 0, 0);
+        //shared memory
+        int *posts;
+        int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
+        posts = (int *)shmat(shmid02, 0, 0);
 
         //permission
         char pid_str[BUFFER_SIZE];
@@ -291,6 +290,14 @@ void subserver_logic(int client_socket){
             char buffer[BUFFER_SIZE];
             memset(buffer,0,sizeof(buffer));
 
+            int *data;
+            int shmid;
+            shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+            data = shmat(shmid, 0, 0); //attach
+            *data = *data - 1;
+            shmdt(data); //detach
+
+
             int currentLine = 1;
 
             while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
@@ -316,14 +323,17 @@ void subserver_logic(int client_socket){
     else {
         printf("Not a valid command!\n");
     }
+    close(forum);
+
+
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");
@@ -387,6 +397,8 @@ int main(int argc, char *argv[] ) {
         }
         else {
             printf("%d Clients Connected \n", numStrings);
+            int status;
+            waitpid(f,&status,0);
             close(client_socket);
         }
     }

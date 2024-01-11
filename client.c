@@ -133,6 +133,8 @@ void clientLogic(int server_socket){
     //downing semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
+    printf("\n");
+
 }
 
 
@@ -146,7 +148,6 @@ int main(int argc, char *argv[] ) {
 
     while(1){
         char line[BUFFER_SIZE];
-
         // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
 
