@@ -46,8 +46,10 @@ char* search_file(const char* filename, char* string) {
         }
     }
     new_string[strlen(new_string)] = '\0';
+    char* new_string1 = malloc(BUFFER_SIZE);
+    strcpy(new_string1,new_string);
     fclose(file);
-    return new_string;
+    return new_string1;
 }
 
 
@@ -341,12 +343,12 @@ void subserver_logic(int client_socket){
 
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     char* new_string = search_file("forum.txt", "post");
@@ -361,7 +363,7 @@ int main(int argc, char *argv[] ) {
     // semaphore
     int semd;
     int set;
-    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    semd = semget(KEY, 1, IPC_EXCL | 0666 | IPC_CREAT  );
     if (semd == -1) {
         printf("errno %d: %s\n", errno, strerror(errno));
         semd = semget(KEY, 1, 0);
