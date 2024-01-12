@@ -21,12 +21,12 @@ static void sighandler( int signo ) {
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 // a function to search the forum file and return all lines containing the given string 
 void search_file(const char* filename, char* keyword, char* filtered_return) {
@@ -98,11 +98,11 @@ void subserver_logic(int client_socket){
         char new_input[BUFFER_SIZE+10];
         sprintf(new_input, "p%d: %s", i ,input);
         write(forum, new_input, strlen(new_input));
-        printf("New_input: %s", new_input);
+        printf("[post created] %s \n", new_input);
         
+        // creates a file named after the post for all of its contents and replies
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", i);
-        printf("Post %s created\n", post_name);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
         char post_creator[BUFFER_SIZE*3];
         sprintf(post_creator, "[by user%s]\n", clientPID);
