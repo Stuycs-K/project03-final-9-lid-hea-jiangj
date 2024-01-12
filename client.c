@@ -65,25 +65,36 @@ int clientLogic(int server_socket, int filtered){
         char content[BUFFER_SIZE];
         // char pid_str[BUFFER_SIZE];
         // int pid_int = getpid();
-        printf("pid: %d\n", pid_int);
+        // printf("pid: %d\n", pid_int);
         // sprintf(pid_str, "%d", pid_int);
+        printf("===================================================\n");
         printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         printf("Enter the content of your post: ");
         fgets(content,sizeof(content),stdin);
+        printf("===================================================\n");
         // printf("fgets: %s\n",input);
         // Send the user input to the client.
         write(server_socket, input, sizeof(input));
         write(server_socket, content, sizeof(content));
         write(server_socket, pid_str, sizeof(pid_str));
     // Read the modified string from the server
-    // read(server_socket, input, sizeof(input));
-
+        char post_content[BUFFER_SIZE*3];
+        read(server_socket, post_content, sizeof(input));
+        int *data;
+        int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+        data = shmat(shmid, 0, 0); //attach
+        clear();
+        printf("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
+        sleep(3);
+        shmdt(data);
 
     // Prints the modified string
     //        printf("%s", input);
     }
     else if (strcmp(input, "view") == 0) {
+        printf("===================================================\n");
         printf("Which post would you like to view? (# only): ");
         fgets(input, sizeof(input), stdin);
         int num;
@@ -116,8 +127,10 @@ int clientLogic(int server_socket, int filtered){
     }
     else if(strcmp(input, "edit") == 0){
         char pid[BUFFER_SIZE];
+        printf("===================================================\n");
         printf("Which post would you like to edit?(# only): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         write(server_socket, input, sizeof(input));
         sprintf(pid, "%d", getpid());
         write(server_socket, pid, sizeof(pid));
@@ -127,8 +140,10 @@ int clientLogic(int server_socket, int filtered){
             char replacement[BUFFER_SIZE];
             printf("Would you like to edit the title or content of this post (title, content): ");
             fgets(choice,sizeof(choice),stdin);
+            printf("===================================================\n");
             printf("What would you like to replace it with: ");
             fgets(replacement,sizeof(replacement),stdin);
+            printf("===================================================\n");
             write(server_socket, choice, sizeof(choice));
             write(server_socket, replacement, sizeof(replacement));
         }
@@ -204,6 +219,7 @@ int clientLogic(int server_socket, int filtered){
 int main(int argc, char *argv[] ) {
 //    printf("client online \n");
     // checks for the IP of the server the client should connect to
+    clear();
     char* IP = NULL;
     if(argc>1){
         IP=argv[1];

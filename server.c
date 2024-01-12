@@ -21,12 +21,12 @@ static void sighandler( int signo ) {
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 // a function to search the forum file and return all lines containing the given string 
 void search_file(const char* filename, char* keyword, char* filtered_return) {
@@ -68,8 +68,8 @@ void subserver_logic(int client_socket){
     read(client_socket, input, sizeof(input));
 
     if (strcmp(input,"post")==0) {
-        char content[BUFFER_SIZE];
-        char pid_str[BUFFER_SIZE];
+        char content[BUFFER_SIZE] = "";
+        char pid_str[BUFFER_SIZE] = "";
         int pid_int;
         
         // gets the post title from the client
@@ -95,25 +95,30 @@ void subserver_logic(int client_socket){
         posts = (int *)shmat(shmid02, 0, 0);
 
         // creates the post in the format [p#: TITLE], writes it in the forum, and prints it
-        char new_input[BUFFER_SIZE+10];
+        char new_input[BUFFER_SIZE+10] = "";
         sprintf(new_input, "p%d: %s", i ,input);
         write(forum, new_input, strlen(new_input));
         printf("[post created] %s \n", new_input);
         
         // creates a file named after the post for all of its contents and replies
-        char post_name[BUFFER_SIZE];
+        char post_name[BUFFER_SIZE] = "";
         sprintf(post_name, "p%d", i);
         int post = open(post_name, O_WRONLY | O_APPEND | O_CREAT, 0666);
-        char post_creator[BUFFER_SIZE*3];
+        char post_creator[BUFFER_SIZE*3] = "";
         sprintf(post_creator, "[by user%s]\n", clientPID);
         write(post, post_creator, strlen(post_creator));
         // write(post, new_input, strlen(new_input));
-        char post_content[BUFFER_SIZE*3];
+        char post_content[BUFFER_SIZE*3] = "";
         sprintf(post_content, "Content: %s\n", content);
         write(post, post_content, strlen(post_content));
         posts[i-1] = pid_int;
-
         // sends back the updated forum
+        char text[BUFFER_SIZE*3] = "";
+        file_to_string(post_name, text);
+        write(client_socket, text, sizeof(text));
+        // printf("===================================================\n%s===================================================\n", post_content);
+        // sleep(1);
+
 
         close(forum);
         close(post);
@@ -122,9 +127,9 @@ void subserver_logic(int client_socket){
     } 
     else if(strcmp(input, "view") == 0){
         read(client_socket, input, sizeof(input));
-        if (strlen(input) <= 3){
-            char* post_name = input;
-            int post = open(post_name, O_WRONLY | O_APPEND, 0666);
+        char* post_name = input;
+        int post = open(post_name, O_WRONLY | O_APPEND, 0666);
+        if (post >= 0){
             char post_content[BUFFER_SIZE];
             file_to_string(post_name, post_content);
             write(client_socket, post_content, strlen(post_content));
@@ -170,7 +175,7 @@ void subserver_logic(int client_socket){
         if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
-            char reply[BUFFER_SIZE] = "===================================================\n\t\tPERMISSION DENIED\n===================================================\n";
+            char reply[BUFFER_SIZE] = "\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
         else{
@@ -180,7 +185,9 @@ void subserver_logic(int client_socket){
             int post = open(post_name, O_RDONLY, 0);
             char content[BUFFER_SIZE] = "";
             file_to_string(post_name, content);
+            printf("===================================================\n");
             printf("Current content of %s: \n%s", post_name, content);
+            printf("===================================================\n");
             close(post);
 
             char choice[BUFFER_SIZE];

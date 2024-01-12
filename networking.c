@@ -107,7 +107,7 @@ void file_to_string(const char* filename, char *accum) {
 
     // while (fgets(line, sizeof(line), file) != NULL) {
     //     char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-    //     if (new_content == NULL) {
+    //     if (new_scontent == NULL) {
     //         perror("realloc error");
     //         exit(1);
     //     }
