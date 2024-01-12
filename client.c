@@ -1,7 +1,7 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
 
-int filtered = 0;
+// int filtered = 0;
 
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
@@ -174,7 +174,16 @@ int clientLogic(int server_socket, int filtered){
     else if(strcmp(input, "sort") == 0){
         printf("how would you like your post sorted: ");
         fgets(input, sizeof(input), stdin);
+        input[strlen(input)-1] = '\0';
         write(server_socket, input, sizeof(input));
+        char content[BUFFER_SIZE*3];
+        read(server_socket, content, sizeof(content));
+        clear();
+        for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
+        printf("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
+        sb.sem_op = 1;
+        semop(semd, &sb, 1);
+        return 1;
     }
     else {
         printf("Not a valid command!\n");
