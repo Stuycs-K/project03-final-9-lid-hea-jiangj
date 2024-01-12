@@ -50,7 +50,7 @@ int clientLogic(int server_socket, int filtered){
     printf("Input a command (post, view, edit, delete, search, sort): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
-    printf("About to write\n");
+//    printf("About to write\n");
     write(server_socket,input,sizeof(input));
     // printf("If statement about to run\n");
     // uping semaphore
@@ -60,7 +60,7 @@ int clientLogic(int server_socket, int filtered){
     sb.sem_flg = SEM_UNDO;
     sb.sem_op = -1;
     semop(semd, &sb, 1);
-    printf("Checking command\n");
+//    printf("Checking command\n");
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
         // char pid_str[BUFFER_SIZE];
@@ -160,16 +160,19 @@ int clientLogic(int server_socket, int filtered){
         }
     }    
     else if(strcmp(input, "search") == 0){
+        char keyword[BUFFER_SIZE];
         printf("what keyword would you like to search: ");
-        fgets(input, sizeof(input), stdin);
-        input[strlen(input)-1] = '\0';
-        write(server_socket, input, sizeof(input));
-        char filtered[BUFFER_SIZE];
+        fgets(keyword, sizeof(keyword), stdin);
+        keyword[strlen(keyword)-1] = '\0';
+        write(server_socket, keyword, sizeof(keyword));
+        char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
-        printf("results with [%s]: \n%s\n", input, filtered);
+        printf("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
+
+//        printf("results with [%s]: \n%s\n", keyword, filtered);
         sb.sem_op = 1;
         semop(semd, &sb, 1);
-        printf("\n");
+//        printf("\n");
         return 1;
     }
     else if(strcmp(input, "sort") == 0){
@@ -192,7 +195,7 @@ int clientLogic(int server_socket, int filtered){
     //upping semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
-    printf("\n");
+//    printf("\n");
     return 0;
 
 }
@@ -258,7 +261,9 @@ int main(int argc, char *argv[] ) {
         // fclose(forum1);
         
         filtered = clientLogic(server_socket, filtered);
-//        clear();
+        if (filtered == 0){
+            clear();
+        }
     }
 }
 
