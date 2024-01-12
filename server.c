@@ -21,12 +21,12 @@ static void sighandler( int signo ) {
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 // a function to search the forum file and return all lines containing the given string 
 void search_file(const char* filename, char* keyword, char* filtered_return) {
