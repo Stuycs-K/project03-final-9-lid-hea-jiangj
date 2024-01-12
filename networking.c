@@ -194,6 +194,7 @@ void file_to_string(const char* filename, char *accum) {
 void clear(){
   char* cmdsargv[32];
   cmdsargv[0] = "clear";
+  cmdsargv[1] = 0;
   int p = fork();
   if(p < 0){
     perror("fork fail");

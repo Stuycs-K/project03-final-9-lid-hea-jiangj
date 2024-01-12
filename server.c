@@ -342,14 +342,13 @@ void subserver_logic(int client_socket){
     }
     else if(strcmp(input, "sort") == 0){
         read(client_socket, input, sizeof(input));
-        input[strlen(input)-1] = '\0';
         printf("%s\n", input);
         if(strcmp(input, "alphabetical") == 0){
             int *data;
             int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
             data = shmat(shmid, 0, 0); //attach
             FILE * posts = fopen("forum.txt", "r");
-            int byte = open(input, O_WRONLY | O_APPEND | O_CREAT, 0666);
+            int byte = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0666);
             char list[*data][BUFFER_SIZE];
             char line1[BUFFER_SIZE];
             int lines = 0;
@@ -361,30 +360,45 @@ void subserver_logic(int client_socket){
                 while(line1[end] != '\n') end++;
                 start++;
                 end++;
-                printf("start: %d end: %d\n", start, end);
+                // printf("start: %d end: %d\n", start, end);
                 for(int i = start; i < end; i++) line2[i-start] = line1[i];
                 // list[lines] = line2;
                 strcpy(list[lines++], line2);
                 // printf("%s", list[lines++]);
                 // write(byte, list[lines++], end-start);
             }
-            char temp[BUFFER_SIZE];
+            int p[*data];
+            for(int i = 0; i < *data; i++) p[i] = i+1;
+            char temp_str[BUFFER_SIZE];
+            int temp_int;
             for(int i = 0; i < *data; i++){
                 for(int j = i+1; j < *data; j++){
                     if(strcmp(list[i], list[j]) > 0){
-                        strcpy(temp, list[i]);
+                        strcpy(temp_str, list[i]);
                         strcpy(list[i], list[j]);
-                        strcpy(list[j], temp);
+                        strcpy(list[j], temp_str);
+                        temp_int = p[i];
+                        p[i] = p[j];
+                        p[j] = temp_int;
                     }
                 }
             }
             // for(int i = 0; i < *data; i++){
             //     printf("%s", list[i]);
             // }
+            char pname[BUFFER_SIZE];
             for(int i = 0; i < *data; i++){
+                sprintf(pname, "p%d: ", p[i]);
+                write(byte, pname, strlen(pname));
                 write(byte, list[i], strlen(list[i]));
+                // printf("%s", list[i]);
             }
             // write(byte, list[1], sizeof(list[1]));
+            char content[BUFFER_SIZE] = "";
+            file_to_string(input, content);
+            // printf("%s", content);
+            write(client_socket, content, sizeof(content));
+
             shmdt(data); //detach
             pclose(posts);
             close(byte);
