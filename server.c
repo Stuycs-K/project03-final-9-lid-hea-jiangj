@@ -21,12 +21,12 @@ static void sighandler( int signo ) {
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 // a function to search the forum file and return all lines containing the given string 
 void search_file(const char* filename, char* keyword, char* filtered_return) {
@@ -37,6 +37,7 @@ void search_file(const char* filename, char* keyword, char* filtered_return) {
     while (fgets(line, BUFFER_SIZE, file) != NULL) {
 //        printf("line: %s [%s]", line, strstr(line, keyword));
         if (strstr(line, keyword) != NULL){ // searches if the line has a reference to the keyword
+            strcat(filtered, "\t");
             strcat(filtered, line);
         }
     }

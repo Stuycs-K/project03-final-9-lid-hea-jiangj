@@ -33,6 +33,10 @@ HW: cleaned up code and reset forum file to have files attached to each post, st
 CW: worked on search function to use keywords for the server to send back a string with posts containing the keyword
 HW: cfinished search function but still a bit buggy (cant use multiple inputs)
 
+### 2024-01-12 - Brief description
+CW: worked on fixing search function to work for linux, issues with random portions of strings being attached
+HW: fixed search function and now the string is reset every time
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
