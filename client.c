@@ -50,7 +50,7 @@ int clientLogic(int server_socket, int filtered){
     printf("Input a command (post, view, edit, delete, search, sort): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
-    // printf("About to write\n");
+    printf("About to write\n");
     write(server_socket,input,sizeof(input));
     // printf("If statement about to run\n");
     // uping semaphore
@@ -60,6 +60,7 @@ int clientLogic(int server_socket, int filtered){
     sb.sem_flg = SEM_UNDO;
     sb.sem_op = -1;
     semop(semd, &sb, 1);
+    printf("Checking command\n");
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE];
         // char pid_str[BUFFER_SIZE];
@@ -179,7 +180,7 @@ int clientLogic(int server_socket, int filtered){
     else {
         printf("Not a valid command!\n");
     }
-    //downing semaphore
+    //upping semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
     printf("\n");

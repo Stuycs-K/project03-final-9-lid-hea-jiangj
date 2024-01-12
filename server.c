@@ -398,6 +398,13 @@ void subserver_logic(int client_socket){
 
 }
 
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
+
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");
 
@@ -408,7 +415,7 @@ int main(int argc, char *argv[] ) {
     // semaphore
     int semd;
     int set;
-    semd = semget(KEY, 1, IPC_EXCL | 0644 | IPC_CREAT  );
+    semd = semget(KEY, 1, IPC_EXCL | 0666 | IPC_CREAT  );
     if (semd == -1) {
         printf("errno %d: %s\n", errno, strerror(errno));
         semd = semget(KEY, 1, 0);
