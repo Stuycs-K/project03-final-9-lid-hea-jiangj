@@ -163,7 +163,7 @@ int clientLogic(int server_socket, int filtered){
         fgets(input, sizeof(input), stdin);
         input[strlen(input)-1] = '\0';
         write(server_socket, input, sizeof(input));
-        char filtered[BUFFER_SIZE] = "";
+        char filtered[BUFFER_SIZE];
         read(server_socket, filtered, sizeof(filtered));
         printf("results with [%s]: \n%s\n", input, filtered);
         sb.sem_op = 1;
