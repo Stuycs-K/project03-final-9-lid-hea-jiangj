@@ -334,7 +334,7 @@ void subserver_logic(int client_socket){
         keyword[strlen(keyword)] = '\0';
         printf("keyword:[%s] length:[%lu]", keyword, strlen(keyword));
         char* filtered = search_file("forum.txt", keyword);
-        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
+//        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
         
         write(client_socket, filtered, strlen(filtered));
     }
