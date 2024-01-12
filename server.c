@@ -333,6 +333,56 @@ void subserver_logic(int client_socket){
         
         write(client_socket, filtered, strlen(filtered));
     }
+    else if(strcmp(input, "sort") == 0){
+        read(client_socket, input, sizeof(input));
+        input[strlen(input)-1] = '\0';
+        printf("%s\n", input);
+        if(strcmp(input, "alphabetical") == 0){
+            int *data;
+            int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+            data = shmat(shmid, 0, 0); //attach
+            FILE * posts = fopen("forum.txt", "r");
+            int byte = open(input, O_WRONLY | O_APPEND | O_CREAT, 0666);
+            char list[*data][BUFFER_SIZE];
+            char line1[BUFFER_SIZE];
+            int lines = 0;
+            while(fgets(line1, sizeof(line1), posts)){
+                char line2[BUFFER_SIZE] = "";
+                int start = 0;
+                int end = 0;
+                while(line1[start] != ' ') start++;
+                while(line1[end] != '\n') end++;
+                start++;
+                end++;
+                printf("start: %d end: %d\n", start, end);
+                for(int i = start; i < end; i++) line2[i-start] = line1[i];
+                // list[lines] = line2;
+                strcpy(list[lines++], line2);
+                // printf("%s", list[lines++]);
+                // write(byte, list[lines++], end-start);
+            }
+            char temp[BUFFER_SIZE];
+            for(int i = 0; i < *data; i++){
+                for(int j = i+1; j < *data; j++){
+                    if(strcmp(list[i], list[j]) > 0){
+                        strcpy(temp, list[i]);
+                        strcpy(list[i], list[j]);
+                        strcpy(list[j], temp);
+                    }
+                }
+            }
+            // for(int i = 0; i < *data; i++){
+            //     printf("%s", list[i]);
+            // }
+            for(int i = 0; i < *data; i++){
+                write(byte, list[i], strlen(list[i]));
+            }
+            // write(byte, list[1], sizeof(list[1]));
+            shmdt(data); //detach
+            pclose(posts);
+            close(byte);
+        }
+    }
     else {
         printf("Not a valid command!\n");
     }
@@ -341,12 +391,12 @@ void subserver_logic(int client_socket){
 
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 int main(int argc, char *argv[] ) {
     char* new_string = search_file("forum.txt", "post");
@@ -396,7 +446,6 @@ int main(int argc, char *argv[] ) {
     shmdt(data); //detach
     shmdt(posts); //detach
     signal(SIGINT,sighandler);
-
     while(1){
         int client_socket = server_tcp_handshake(listen_socket);
         numStrings++;

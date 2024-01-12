@@ -46,7 +46,7 @@ void clientLogic(int server_socket, int filtered){
         printf("%s===================================================\n", input);
     }
 
-    printf("Input a command (post, view, edit, delete, search): ");
+    printf("Input a command (post, view, edit, delete, search, sort): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     // printf("About to write\n");
@@ -109,7 +109,7 @@ void clientLogic(int server_socket, int filtered){
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
             // read(server_socket, input, sizeof(input));
-            // printf
+            // printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
         }
     }
     else if(strcmp(input, "edit") == 0){
@@ -166,6 +166,11 @@ void clientLogic(int server_socket, int filtered){
         read(server_socket, filtered, sizeof(filtered));
         printf("results with [%s]: \n%s\n", input, filtered);
         clientLogic(server_socket, 1);
+    }
+    else if(strcmp(input, "sort") == 0){
+        printf("how would you like your post sorted: ");
+        fgets(input, sizeof(input), stdin);
+        write(server_socket, input, sizeof(input));
     }
     else {
         printf("Not a valid command!\n");
