@@ -23,7 +23,7 @@ static void sighandler( int signo ) {
         exit(0);
     }
 }
-void clientLogic(int server_socket, int filtered){
+int clientLogic(int server_socket, int filtered){
 //    printf("clientLogic reached\n");
 //    while(1){
     // Prompts the user for a string.
@@ -43,10 +43,11 @@ void clientLogic(int server_socket, int filtered){
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
     if (filtered == 0){
+        printf("MOST RECENT POSTS:\n===================================================\n");
         printf("%s===================================================\n", input);
     }
 
-    printf("Input a command (post, view, edit, delete, search): ");
+    printf("Input a command (post, view, edit, delete, search, sort): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
     printf("About to write\n");
@@ -110,7 +111,7 @@ void clientLogic(int server_socket, int filtered){
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
             write(server_socket, input, sizeof(input));
             // read(server_socket, input, sizeof(input));
-            // printf
+            // printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
         }
     }
     else if(strcmp(input, "edit") == 0){
@@ -166,7 +167,15 @@ void clientLogic(int server_socket, int filtered){
         char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
         printf("results with [%s]: \n%s\n", input, filtered);
-        clientLogic(server_socket, 1);
+        sb.sem_op = 1;
+        semop(semd, &sb, 1);
+        printf("\n");
+        return 1;
+    }
+    else if(strcmp(input, "sort") == 0){
+        printf("how would you like your post sorted: ");
+        fgets(input, sizeof(input), stdin);
+        write(server_socket, input, sizeof(input));
     }
     else {
         printf("Not a valid command!\n");
@@ -175,6 +184,7 @@ void clientLogic(int server_socket, int filtered){
     sb.sem_op = 1;
     semop(semd, &sb, 1);
     printf("\n");
+    return 0;
 
 }
 
@@ -186,7 +196,7 @@ int main(int argc, char *argv[] ) {
     if(argc>1){
         IP=argv[1];
     }
-
+    int filtered = 0;
     while(1){
         char line[BUFFER_SIZE];
         // connect to the server through IP
@@ -230,8 +240,6 @@ int main(int argc, char *argv[] ) {
         //     // Go to the start of the line
         //     fseek(forum1, filePos + 1, SEEK_SET);
         // }
-
-        printf("MOST RECENT POSTS:\n===================================================\n");
         // for (int i = 0;i<lineCount;i++) {
         //     if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
         //         printf("%s",lines[i]);
@@ -240,8 +248,8 @@ int main(int argc, char *argv[] ) {
         // printf("===================================================\n");
         // fclose(forum1);
         
-        clientLogic(server_socket, 0);
-        clear();
+        filtered = clientLogic(server_socket, filtered);
+//        clear();
     }
 }
 

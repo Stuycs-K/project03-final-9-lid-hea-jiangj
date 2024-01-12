@@ -1,17 +1,5 @@
 #include "networking.h"
 
-// // trim_input trims the input for newlines to be used for parse_args and execute
-// // args:        input, the command to be ran
-// // returns:     no return value  
-// void trim_input(char *input) {
-//     for(int x = 0; x < strlen(input); x++){
-//         if (strcmp(&input[x], "\n") == 0 || strcmp(&input[x], "\r") == 0){
-//             input[x] = 0; // removes new line
-//             break;
-//         }
-//     }
-// }
-
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
         //removing semaphore
@@ -33,37 +21,47 @@ static void sighandler( int signo ) {
     }
 }
 
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
-char* search_file(const char* filename, char* string) {
+// a function to search the forum file and return all lines containing the given string 
+char* search_file(const char* filename, char* keyword) {
     FILE *file = fopen("forum.txt", "r");
-    char buff[BUFFER_SIZE] = "";
-    char new_string[BUFFER_SIZE] = "";
+    char line[BUFFER_SIZE] = "";
+    char filtered[BUFFER_SIZE] = "";
     int byte;
-    while (fgets(buff, BUFFER_SIZE, file) != NULL) {
-//        printf("line: %s [%s]", buff, strstr(buff, string));
-        if (strstr(buff, string) != NULL){
-            strcat(new_string, buff);
+    while (fgets(line, BUFFER_SIZE, file) != NULL) {
+//        printf("line: %s [%s]", line, strstr(line, string));
+        if (strstr(line, keyword) != NULL){ // searches if the line has a reference to the keyword
+            strcat(filtered, line);
         }
     }
-    new_string[strlen(new_string)] = '\0';
-    char* new_string1 = malloc(BUFFER_SIZE);
-    strcpy(new_string1,new_string);
+    filtered[strlen(filtered)] = '\0';
     fclose(file);
-    return new_string1;
+    return filtered;
 }
 
 
 void subserver_logic(int client_socket){
+
+    // gets the connected client's PID to identify the user
     char clientPID[BUFFER_SIZE+12];
     read(client_socket, clientPID, sizeof(clientPID));
     printf("clientPID: %s\n", clientPID);
+
+    // opens the forum and sends it to the client to display
     int forum = open("forum.txt", O_WRONLY | O_APPEND, 0666);
     FILE* forum2 = fopen("forum.txt","r");
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
     write(client_socket, accum, strlen(accum));
-//    printf("%s", accum);
-    // Gets the client's command
+
+    
+    // gets the client's intial command (post, view, edit, delete, search, sort)
     char input[BUFFER_SIZE];
     read(client_socket, input, sizeof(input));
 
@@ -71,8 +69,12 @@ void subserver_logic(int client_socket){
         char content[BUFFER_SIZE];
         char pid_str[BUFFER_SIZE];
         int pid_int;
+        
+        // gets the post title from the client
         read(client_socket, input, sizeof(input));
+        // gets the post content from the client
         read(client_socket, content, sizeof(content));
+        // gets the pid of the connected client and turns it from a string to an int
         read(client_socket, pid_str, sizeof(pid_str));
         sscanf(pid_str, "%d", &pid_int);
         printf("Input received: %s\n",input);
@@ -90,11 +92,12 @@ void subserver_logic(int client_socket){
         int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
         posts = (int *)shmat(shmid02, 0, 0);
 
+        // creates the post in the format [p#: TITLE], writes it in the forum, and prints it
         char new_input[BUFFER_SIZE+10];
         sprintf(new_input, "p%d: %s", i ,input);
-        // printf("%ld\n",strlen(new_input));
         write(forum, new_input, strlen(new_input));
         printf("New_input: %s", new_input);
+        
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", i);
         printf("Post %s created\n", post_name);
@@ -331,9 +334,59 @@ void subserver_logic(int client_socket){
         keyword[strlen(keyword)] = '\0';
         printf("keyword:[%s] length:[%lu]", keyword, strlen(keyword));
         char* filtered = search_file("forum.txt", keyword);
-        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
+//        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
         
         write(client_socket, filtered, strlen(filtered));
+    }
+    else if(strcmp(input, "sort") == 0){
+        read(client_socket, input, sizeof(input));
+        input[strlen(input)-1] = '\0';
+        printf("%s\n", input);
+        if(strcmp(input, "alphabetical") == 0){
+            int *data;
+            int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+            data = shmat(shmid, 0, 0); //attach
+            FILE * posts = fopen("forum.txt", "r");
+            int byte = open(input, O_WRONLY | O_APPEND | O_CREAT, 0666);
+            char list[*data][BUFFER_SIZE];
+            char line1[BUFFER_SIZE];
+            int lines = 0;
+            while(fgets(line1, sizeof(line1), posts)){
+                char line2[BUFFER_SIZE] = "";
+                int start = 0;
+                int end = 0;
+                while(line1[start] != ' ') start++;
+                while(line1[end] != '\n') end++;
+                start++;
+                end++;
+                printf("start: %d end: %d\n", start, end);
+                for(int i = start; i < end; i++) line2[i-start] = line1[i];
+                // list[lines] = line2;
+                strcpy(list[lines++], line2);
+                // printf("%s", list[lines++]);
+                // write(byte, list[lines++], end-start);
+            }
+            char temp[BUFFER_SIZE];
+            for(int i = 0; i < *data; i++){
+                for(int j = i+1; j < *data; j++){
+                    if(strcmp(list[i], list[j]) > 0){
+                        strcpy(temp, list[i]);
+                        strcpy(list[i], list[j]);
+                        strcpy(list[j], temp);
+                    }
+                }
+            }
+            // for(int i = 0; i < *data; i++){
+            //     printf("%s", list[i]);
+            // }
+            for(int i = 0; i < *data; i++){
+                write(byte, list[i], strlen(list[i]));
+            }
+            // write(byte, list[1], sizeof(list[1]));
+            shmdt(data); //detach
+            pclose(posts);
+            close(byte);
+        }
     }
     else {
         printf("Not a valid command!\n");
@@ -351,14 +404,11 @@ union semun {
  };
 
 int main(int argc, char *argv[] ) {
-    char* new_string = search_file("forum.txt", "post");
-    printf("%s", new_string);
     printf("SERVER ONLINE\n===================================================\n");
-    // int forum = open("forum.txt",O_RDONLY);
-    // // printf("%s", file_to_string("forum.txt"));
+
     FILE* forum1 = fopen("forum.txt","r");
     int listen_socket = server_setup();
-    int numStrings = 0;
+    int numClients = 0;
 
     // semaphore
     int semd;
@@ -400,20 +450,25 @@ int main(int argc, char *argv[] ) {
     signal(SIGINT,sighandler);
 
     while(1){
+        // waits waits for client connection
         int client_socket = server_tcp_handshake(listen_socket);
-        numStrings++;
+        numClients++;
+
+        // forks a separate process to interact with a client
         pid_t f = fork();
         if(f < 0) {
             perror("fork fail");
             exit(1);
         }
-        else if (f == 0){  // child process
+        else if (f == 0){ 
+            // subserver deals with the client stuff
             subserver_logic(client_socket);
             close(client_socket);
             exit(0);
         }
         else {
-            printf("%d Clients Connected \n", numStrings);
+            // server prints the number of clients connected and waits for subserver process to finish
+            printf("%d Clients Connected \n", numClients);
             int status;
             waitpid(f,&status,0);
             close(client_socket);

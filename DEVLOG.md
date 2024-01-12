@@ -65,6 +65,10 @@ HW: succesffuly transferred client logic for editing to server side and debugged
 CW: fixed error when reading from files and seeing random special characters due to issues regarding memory allocation. debugged view function error regarding strings not resetting properly and printing out data from previous strings. began work on fixing edit bugs
 HW: bebugged edit functon bug regarding content not being overwritten properly.
 
+### 2024-01-10 - Brief description
+CW: modifed strings throughout program to create neater displays on the terminal (still working). created a clear function that utilizes forking and execvp to clear the terminal so that the display of our program is more similar to reddit. began work on sorting function for the title names of out posts
+HW: continued working on implementing neater formatting and clear throughout the program so that the user display is more similar to reddit. successfully sorted title posts alphabetically and into a new text file (still needs work).
+
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description
