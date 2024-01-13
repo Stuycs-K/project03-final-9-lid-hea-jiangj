@@ -211,21 +211,34 @@ int clientLogic(int server_socket, int filtered){
         return 1;
     }
     else if(strcmp(input, "sort") == 0){
-        printf("how would you like your post sorted: ");
+        printf("===================================================\n");
+        printf("How would you like your post sorted?(alphabetical): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         input[strlen(input)-1] = '\0';
         write(server_socket, input, sizeof(input));
-        char content[BUFFER_SIZE*3];
-        read(server_socket, content, sizeof(content));
-        clear();
-        for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
-        printf("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
-        sb.sem_op = 1;
-        semop(semd, &sb, 1);
-        return 1;
+        char reply[BUFFER_SIZE] = "";
+        read(server_socket, reply, sizeof(reply));
+        if(strcmp(reply, "NO") != 0){
+            char content[BUFFER_SIZE*3];
+            read(server_socket, content, sizeof(content));
+            clear();
+            for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
+            printf("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
+            sb.sem_op = 1;
+            semop(semd, &sb, 1);
+            return 1;
+        }
+        else{
+            read(server_socket, reply, sizeof(reply));
+            printf("\t\tINVALID CHOICE\n===================================================\n");
+            sleep(1);
+        }
     }
     else {
-        printf("Not a valid command!\n");
+        printf("===================================================\n");
+        printf("NOT A VALID COMMAND\n");
+        printf("===================================================\n");
     }
     //upping semaphore
     sb.sem_op = 1;

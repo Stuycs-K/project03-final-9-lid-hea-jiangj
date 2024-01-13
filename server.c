@@ -379,6 +379,8 @@ void subserver_logic(int client_socket){
         read(client_socket, input, sizeof(input));
         printf("%s\n", input);
         if(strcmp(input, "alphabetical") == 0){
+            char answer[BUFFER_SIZE] = "YES";
+            write(client_socket, answer, sizeof(answer));
             int *data;
             int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
             data = shmat(shmid, 0, 0); //attach
@@ -437,6 +439,11 @@ void subserver_logic(int client_socket){
             shmdt(data); //detach
             pclose(posts);
             close(byte);
+        }
+        // else if(strcmp(input, "time"))
+        else{
+            char answer[BUFFER_SIZE] = "NO";
+            write(client_socket, answer, sizeof(answer));
         }
     }
     else {
