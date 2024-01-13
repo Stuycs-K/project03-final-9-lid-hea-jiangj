@@ -99,7 +99,7 @@ int clientLogic(int server_socket, int filtered){
         fgets(input, sizeof(input), stdin);
         int num;
         sscanf(input, "%d", &num);
-        char post_name[BUFFER_SIZE];
+        char post_name[BUFFER_SIZE] = "";
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
 
@@ -130,22 +130,38 @@ int clientLogic(int server_socket, int filtered){
         printf("===================================================\n");
         printf("Which post would you like to edit?(# only): ");
         fgets(input, sizeof(input), stdin);
+        char post_num[BUFFER_SIZE];
+        strcpy(post_num, input);
+        post_num[strlen(post_num)-1] = '\0';
         printf("===================================================\n");
         write(server_socket, input, sizeof(input));
         sprintf(pid, "%d", getpid());
         write(server_socket, pid, sizeof(pid));
         read(server_socket, input, sizeof(input));
         if(strcmp(input, "NO") != 0) {
-            char choice[BUFFER_SIZE];
-            char replacement[BUFFER_SIZE];
+            char content[BUFFER_SIZE] = "";
+            read(server_socket, content, sizeof(content));
+            printf("Current content of p%s: \n%s", post_num, content);
+            printf("===================================================\n");
+            char choice[BUFFER_SIZE] = "";
+            char replacement[BUFFER_SIZE] = "";
             printf("Would you like to edit the title or content of this post (title, content): ");
             fgets(choice,sizeof(choice),stdin);
             printf("===================================================\n");
-            printf("What would you like to replace it with: ");
-            fgets(replacement,sizeof(replacement),stdin);
-            printf("===================================================\n");
             write(server_socket, choice, sizeof(choice));
-            write(server_socket, replacement, sizeof(replacement));
+
+            read(server_socket, input, sizeof(input));
+            if(strcmp(input, "NO") != 0) {
+                printf("What would you like to replace it with: ");
+                fgets(replacement,sizeof(replacement),stdin);
+                write(server_socket, replacement, sizeof(replacement));
+                printf("===================================================\n");
+            }
+            else{
+                read(server_socket, input, sizeof(input));
+                printf("%s", input);
+                sleep(1);
+            }
         }
         else{
             read(server_socket, input, sizeof(input));
