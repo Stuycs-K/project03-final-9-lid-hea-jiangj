@@ -25,3 +25,4 @@ clean:
 	rm *.o
 	rm client
 	rm server
+	rm alphabetical

@@ -21,30 +21,30 @@ static void sighandler( int signo ) {
     }
 }
 
-union semun {
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;  
-    struct seminfo *__buf;  
- };
+// union semun {
+//     int val;
+//     struct semid_ds *buf;
+//     unsigned short *array;  
+//     struct seminfo *__buf;  
+//  };
 
 // a function to search the forum file and return all lines containing the given string 
-void search_file(const char* filename, char* keyword, char* filtered_return) {
+void search_file(const char* filename, char* keyword, char* filtered) {
+
+    // opens the forum and initialize line
     FILE *file = fopen("forum.txt", "r");
     char line[BUFFER_SIZE] = "";
-    char filtered[BUFFER_SIZE] = "";
-    int byte;
+
+    // searches if the line has a reference to the keyword
     while (fgets(line, BUFFER_SIZE, file) != NULL) {
-//        printf("line: %s [%s]", line, strstr(line, keyword));
-        if (strstr(line, keyword) != NULL){ // searches if the line has a reference to the keyword
+        if (strstr(line, keyword) != NULL){ 
             strcat(filtered, "\t");
             strcat(filtered, line);
         }
     }
+
     filtered[strlen(filtered)] = '\0';
-//    printf("%s", filtered);
     fclose(file);
-    strcpy(filtered_return, filtered);
 }
 
 
@@ -61,12 +61,12 @@ void subserver_logic(int client_socket){
     char accum[BUFFER_SIZE] = "";
     file_to_string("forum.txt", accum);
     write(client_socket, accum, strlen(accum));
-
     
     // gets the client's intial command (post, view, edit, delete, search, sort)
     char input[BUFFER_SIZE];
     read(client_socket, input, sizeof(input));
 
+    // check if the inputted command is [post]
     if (strcmp(input,"post")==0) {
         char content[BUFFER_SIZE] = "";
         char pid_str[BUFFER_SIZE] = "";
@@ -116,51 +116,59 @@ void subserver_logic(int client_socket){
         char text[BUFFER_SIZE*3] = "";
         file_to_string(post_name, text);
         write(client_socket, text, sizeof(text));
-        // printf("===================================================\n%s===================================================\n", post_content);
-        // sleep(1);
-
 
         close(forum);
         close(post);
         shmdt(data); //detach
         shmdt(posts); //detach
     } 
+    // checks if the inputted command is [view]
     else if(strcmp(input, "view") == 0){
+
+        // reads and opens the file associated with the inputted file number
         read(client_socket, input, sizeof(input));
         char* post_name = input;
         int post = open(post_name, O_WRONLY | O_APPEND, 0666);
+
+        // checks if post opens correctly
         if (post >= 0){
+            // sends the post file content as a string to the client
             char post_content[BUFFER_SIZE];
             file_to_string(post_name, post_content);
             write(client_socket, post_content, strlen(post_content));
+            // checks for the next inputted client command ([reply] or [back])
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
+                // reads the client reply and writes it into the post file with user tag attached
                 char reply[BUFFER_SIZE*3];
                 read(client_socket, input, sizeof(input));
                 sprintf(reply, "\t[user%s] %s\n", clientPID, input);
                 write(post, reply, strlen(reply));
-                // file_to_string(post_name, post_content);
-                // write(client_socket, post_content, strlen(post_content));
             }
             else if (strcmp(input, "back") == 0){
-
+                // nothing happens and the client naturally goes back to original forum screen
             }
             else {
+                // tells the client that the inputted command is invalid
                 char invalid[BUFFER_SIZE] = "Invalid Command";
                 write(client_socket, invalid, sizeof(invalid));
             }
         }
         else{
+            // tells the client that the inputted post is invalid
             char invalid[BUFFER_SIZE] = "Invalid Post";
             write(client_socket, invalid, sizeof(invalid));
         }
     }
+    
+    // checks if the inputted command is [edit]
     else if (strcmp(input, "edit")==0) {
+
+        // checks the post number send by the client and places it into its file format
         read(client_socket, input, sizeof(input));
         char post_name[BUFFER_SIZE];
         int num;
         sscanf(input, "%d", &num);
-        // printf("%d\n", num);
         sprintf(post_name, "p%d", num);
 
         //shared memory
@@ -171,47 +179,54 @@ void subserver_logic(int client_socket){
         //permission
         char pid_str[BUFFER_SIZE];
         int pid_int;
+
+        // gets the client pid opens the post
         read(client_socket, pid_str, sizeof(pid_str));
         sscanf(pid_str, "%d", &pid_int);
         int post = open(post_name, O_RDONLY, 0);
+
+        // checks if post exists and tells client that it doesn't if it doesn't
         if(post < 0){
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
             char reply[BUFFER_SIZE] = "\t\tPOST DOES NOT EXIST\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
+        // checks if the post has the same client pid before, if not, permission is denied
         else if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
             char reply[BUFFER_SIZE] = "\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
+        // allows the client to edit the post they made
         else{
             char answer[BUFFER_SIZE] = "YES";
             write(client_socket, answer, sizeof(answer));
-            // sprintf(post_name, "p%d", num);
-            // int post = open(post_name, O_RDONLY, 0);
             char content[BUFFER_SIZE] = "";
+
+            // displays the post to the client
             file_to_string(post_name, content);
             write(client_socket, content, sizeof(content));
-            // printf("===================================================\n");
-            // printf("Current content of %s: \n%s", post_name, content);
-            // printf("===================================================\n");
             close(post);
-
+            
+            // changes the post title or post content based on client input
             char choice[BUFFER_SIZE];
             char replacement[BUFFER_SIZE];
             read(client_socket, choice, sizeof(choice));
+            // tells the client that an invalid choice was made
             if(strcmp(choice, "title\n") != 0 && strcmp(choice, "content\n") != 0){
                 char answer1[BUFFER_SIZE] = "NO";
                 write(client_socket, answer1, sizeof(answer));
                 char reply[BUFFER_SIZE] = "\t\tINVALID CHOICE\n===================================================\n";
                 write(client_socket, reply, sizeof(reply));
             }
+            // tells the client a valid choice was made and asks for a replacement
             else{
                 write(client_socket, answer, sizeof(answer));
                 read(client_socket, replacement, sizeof(replacement));
 
+                // replaces the line in the post file
                 FILE *file, *tempFile;
                 char buffer[BUFFER_SIZE];
                 int lineToReplace = num; // The line number to replace
@@ -285,7 +300,9 @@ void subserver_logic(int client_socket){
             }
         }
     }
+    // checks if the inputted command is [delete]
     else if(strcmp(input,"delete")==0) {
+        // gets the client pid
         read(client_socket, input, sizeof(input));
         char post_name[BUFFER_SIZE];
         int num;
@@ -304,23 +321,27 @@ void subserver_logic(int client_socket){
         read(client_socket, pid_str, sizeof(pid_str));
         sscanf(pid_str, "%d", &pid_int);
         int post = open(post_name, O_RDONLY, 0);
+        // checks if the post file exists
         if(post < 0){
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
             char reply[BUFFER_SIZE] = "\t\tPOST DOES NOT EXIST\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
+        // checks if the client has permissions to delete the post
         else if(posts[num-1] != pid_int) {
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
             char reply[BUFFER_SIZE] = "\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
+        // allows the client to delete the post
         else{
             char answer[BUFFER_SIZE] = "YES";
             write(client_socket, answer, sizeof(answer));
             close(post);
             sprintf(post_name, "p%d", num);
+
             //Deleting post file
             if (remove(post_name) == 0)
                 printf("Deleted successfully");
@@ -364,20 +385,25 @@ void subserver_logic(int client_socket){
             rename("temp.txt", "forum.txt");
         }
     }
+    // checks if the inputted command is [search]
     else if(strcmp(input, "search") == 0){
+        // takes in a keyword from the client
         char keyword[BUFFER_SIZE];
         read(client_socket, keyword, sizeof(keyword));
         keyword[strlen(keyword)] = '\0';
         printf("keyword:[%s] length:[%lu]", keyword, strlen(keyword));
+
+        // searches the file for the keyword and sends all lines containing it back to client
         char filtered[BUFFER_SIZE] = ""; 
-        search_file("forum.txt", keyword, filtered);
-        printf("filtered: %s strlen: %lu", filtered, strlen(filtered));
-        
+        search_file("forum.txt", keyword, filtered);        
         write(client_socket, filtered, strlen(filtered));
     }
+    // checks if the inputted command is [sort]
     else if(strcmp(input, "sort") == 0){
+        // checks which sort the client inputted
         read(client_socket, input, sizeof(input));
         printf("%s\n", input);
+        // alphabetizes forum.txt and sends it back to the client
         if(strcmp(input, "alphabetical") == 0){
             char answer[BUFFER_SIZE] = "YES";
             write(client_socket, answer, sizeof(answer));
@@ -446,12 +472,11 @@ void subserver_logic(int client_socket){
             write(client_socket, answer, sizeof(answer));
         }
     }
+    // tells the client that the inputted command is invalid
     else {
         printf("Not a valid command!\n");
     }
     close(forum);
-
-
 }
 
 int main(int argc, char *argv[] ) {
@@ -464,7 +489,7 @@ int main(int argc, char *argv[] ) {
     // semaphore
     int semd;
     int set;
-    semd = semget(KEY, 1, IPC_EXCL | 0666 | IPC_CREAT  );
+    semd = semget(KEY, 1, IPC_EXCL | 0666 | IPC_CREAT);
     if (semd == -1) {
         printf("errno %d: %s\n", errno, strerror(errno));
         semd = semget(KEY, 1, 0);
@@ -492,6 +517,7 @@ int main(int argc, char *argv[] ) {
     int shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
     posts = (int *)shmat(shmid02, 0, 0); //attaching
 
+    // checks how many posts have been made
     while (fgets(line,sizeof(line),forum1)) {
         if (line[0]=='p') *data = *data + 1;
     }
