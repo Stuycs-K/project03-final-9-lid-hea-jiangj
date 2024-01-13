@@ -291,6 +291,7 @@ void subserver_logic(int client_socket){
         int num;
         sscanf(input, "%d", &num);
         printf("%d\n", num);
+        sprintf(post_name, "p%d", num);
 
         //shared memory
         int *posts;
@@ -302,15 +303,23 @@ void subserver_logic(int client_socket){
         int pid_int;
         read(client_socket, pid_str, sizeof(pid_str));
         sscanf(pid_str, "%d", &pid_int);
-        if(posts[num-1] != pid_int) {
+        int post = open(post_name, O_RDONLY, 0);
+        if(post < 0){
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
-            char reply[BUFFER_SIZE] = "You do not have permission to delete this post!\n";
+            char reply[BUFFER_SIZE] = "\t\tPOST DOES NOT EXIST\n===================================================\n";
+            write(client_socket, reply, sizeof(reply));
+        }
+        else if(posts[num-1] != pid_int) {
+            char answer[BUFFER_SIZE] = "NO";
+            write(client_socket, answer, sizeof(answer));
+            char reply[BUFFER_SIZE] = "\t\tPERMISSION DENIED\n===================================================\n";
             write(client_socket, reply, sizeof(reply));
         }
         else{
             char answer[BUFFER_SIZE] = "YES";
             write(client_socket, answer, sizeof(answer));
+            close(post);
             sprintf(post_name, "p%d", num);
             //Deleting post file
             if (remove(post_name) == 0)

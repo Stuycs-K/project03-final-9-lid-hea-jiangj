@@ -87,7 +87,7 @@ int clientLogic(int server_socket, int filtered){
         data = shmat(shmid, 0, 0); //attach
         clear();
         printf("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
-        sleep(3);
+        sleep(2);
         shmdt(data);
 
     // Prints the modified string
@@ -176,18 +176,22 @@ int clientLogic(int server_socket, int filtered){
         //delete title from forum.txt
         //down data by 1
         char pid[BUFFER_SIZE];
+        printf("===================================================\n");
         printf("Which post would you like to delete?(# only): ");
         fgets(input, sizeof(input), stdin);
+        printf("===================================================\n");
         write(server_socket, input, sizeof(input));
         sprintf(pid, "%d", getpid());
         write(server_socket, pid, sizeof(pid));
         read(server_socket, input, sizeof(input));
         if(strcmp(input, "NO") != 0) {
-            printf("File deleted\n");            
-        }
+            printf("\t\tFILE DELETED\n===================================================\n"); 
+            sleep(1);        
+        }   
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
+            sleep(1);
         }
     }    
     else if(strcmp(input, "search") == 0){
