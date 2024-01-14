@@ -69,9 +69,17 @@ HW: succesffuly transferred client logic for editing to server side and debugged
 CW: fixed error when reading from files and seeing random special characters due to issues regarding memory allocation. debugged view function error regarding strings not resetting properly and printing out data from previous strings. began work on fixing edit bugs
 HW: bebugged edit functon bug regarding content not being overwritten properly.
 
-### 2024-01-10 - Brief description
+### 2024-01-11 - Brief description
 CW: modifed strings throughout program to create neater displays on the terminal (still working). created a clear function that utilizes forking and execvp to clear the terminal so that the display of our program is more similar to reddit. began work on sorting function for the title names of out posts
 HW: continued working on implementing neater formatting and clear throughout the program so that the user display is more similar to reddit. successfully sorted title posts alphabetically and into a new text file (still needs work).
+
+### 2024-01-12 - Brief description
+CW: finished sorting function for alphabetical format and started started brainstorming how to develop sorting function for most recently modified. brushed up on some more formatting
+HW: continued brushing up on formatting for display in terminal and debugged certain test cases in post and view function when user inputs unspecificed data
+
+### 2024-01-13 - Brief description
+WORK: completed neat formatting in terminal for edit, delete, search, and sort as well as debugging unspecificed user input test cases for all functions. completed sorting by most recently modified posts utilizing the stat library and the st_mtime field to re-arrange the posts in order of most recently modified. planning on revisiting semaphores for better implemenatation.
+
 
 ## Player 3: Jack Jiang
 
