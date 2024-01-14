@@ -21,12 +21,12 @@ static void sighandler( int signo ) {
     }
 }
 
-// union semun {
-//     int val;
-//     struct semid_ds *buf;
-//     unsigned short *array;  
-//     struct seminfo *__buf;  
-//  };
+union semun {
+    int val;
+    struct semid_ds *buf;
+    unsigned short *array;  
+    struct seminfo *__buf;  
+ };
 
 // a function to search the forum file and return all lines containing the given string 
 void search_file(const char* filename, char* keyword, char* filtered) {
@@ -404,36 +404,34 @@ void subserver_logic(int client_socket){
         read(client_socket, input, sizeof(input));
         printf("%s\n", input);
         // alphabetizes forum.txt and sends it back to the client
+        char answer[BUFFER_SIZE] = "YES";
+        // write(client_socket, answer, sizeof(answer));
+        int *data;
+        int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
+        data = shmat(shmid, 0, 0); //attach
+        FILE * posts = fopen("forum.txt", "r");
+        char list[*data][BUFFER_SIZE];
+        char line1[BUFFER_SIZE];
+        int lines = 0;
+        while(fgets(line1, sizeof(line1), posts)){
+            char line2[BUFFER_SIZE] = "";
+            int start = 0;
+            int end = 0;
+            while(line1[start] != ' ') start++;
+            while(line1[end] != '\n') end++;
+            start++;
+            end++;
+            for(int i = start; i < end; i++) line2[i-start] = line1[i];
+            strcpy(list[lines++], line2);
+        }
+        int p[*data];
+        for(int i = 0; i < *data; i++) p[i] = i+1;
+        int temp_int;
+
         if(strcmp(input, "alphabetical") == 0){
+            char temp_str[BUFFER_SIZE] = "";
             char answer[BUFFER_SIZE] = "YES";
             write(client_socket, answer, sizeof(answer));
-            int *data;
-            int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
-            data = shmat(shmid, 0, 0); //attach
-            FILE * posts = fopen("forum.txt", "r");
-            int byte = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-            char list[*data][BUFFER_SIZE];
-            char line1[BUFFER_SIZE];
-            int lines = 0;
-            while(fgets(line1, sizeof(line1), posts)){
-                char line2[BUFFER_SIZE] = "";
-                int start = 0;
-                int end = 0;
-                while(line1[start] != ' ') start++;
-                while(line1[end] != '\n') end++;
-                start++;
-                end++;
-                // printf("start: %d end: %d\n", start, end);
-                for(int i = start; i < end; i++) line2[i-start] = line1[i];
-                // list[lines] = line2;
-                strcpy(list[lines++], line2);
-                // printf("%s", list[lines++]);
-                // write(byte, list[lines++], end-start);
-            }
-            int p[*data];
-            for(int i = 0; i < *data; i++) p[i] = i+1;
-            char temp_str[BUFFER_SIZE];
-            int temp_int;
             for(int i = 0; i < *data; i++){
                 for(int j = i+1; j < *data; j++){
                     if(strcmp(list[i], list[j]) > 0){
@@ -446,31 +444,66 @@ void subserver_logic(int client_socket){
                     }
                 }
             }
-            // for(int i = 0; i < *data; i++){
-            //     printf("%s", list[i]);
-            // }
-            char pname[BUFFER_SIZE];
+            char pname[BUFFER_SIZE] = "";
+            int byte = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0666);
             for(int i = 0; i < *data; i++){
                 sprintf(pname, "p%d: ", p[i]);
                 write(byte, pname, strlen(pname));
                 write(byte, list[i], strlen(list[i]));
-                // printf("%s", list[i]);
             }
-            // write(byte, list[1], sizeof(list[1]));
             char content[BUFFER_SIZE] = "";
             file_to_string(input, content);
-            // printf("%s", content);
             write(client_socket, content, sizeof(content));
 
-            shmdt(data); //detach
-            pclose(posts);
             close(byte);
         }
-        // else if(strcmp(input, "time"))
+        else if(strcmp(input, "recency") == 0){
+            char answer[BUFFER_SIZE] = "YES";
+            write(client_socket, answer, sizeof(answer));
+            time_t temp_time;
+            char temp_str[BUFFER_SIZE] = "";
+            struct stat * stat_buff = malloc(sizeof(struct stat)*1);
+            time_t times[*data];
+            for(int i = 0; i < *data; i++) {
+                char pname[BUFFER_SIZE] = "";
+                sprintf(pname, "p%d", p[i]);
+                stat(pname, stat_buff);
+                times[i] = stat_buff->st_mtime;
+            }
+            for(int i = 0; i < *data; i++){
+                for(int j = i+1; j < *data; j++){
+                    if(times[i] < times[j]){
+                        temp_time = times[i];
+                        times[i] = times[j];
+                        times[j] = temp_time;
+                        strcpy(temp_str, list[i]);
+                        strcpy(list[i], list[j]);
+                        strcpy(list[j], temp_str);
+                        temp_int = p[i];
+                        p[i] = p[j];
+                        p[j] = temp_int;
+                    }
+                }
+            }
+            char pname[BUFFER_SIZE] = "";
+            int byte = open(input, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            for(int i = 0; i < *data; i++){
+                sprintf(pname, "p%d: ", p[i]);
+                write(byte, pname, strlen(pname));
+                write(byte, list[i], strlen(list[i]));
+            }
+            char content[BUFFER_SIZE] = "";
+            file_to_string(input, content);
+            write(client_socket, content, sizeof(content));
+
+            close(byte);
+        }
         else{
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
         }
+        shmdt(data); //detach
+        pclose(posts);
     }
     // tells the client that the inputted command is invalid
     else {

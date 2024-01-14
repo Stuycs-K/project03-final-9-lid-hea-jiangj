@@ -212,7 +212,7 @@ int clientLogic(int server_socket, int filtered){
     }
     else if(strcmp(input, "sort") == 0){
         printf("===================================================\n");
-        printf("How would you like your post sorted?(alphabetical): ");
+        printf("How would you like your post sorted?(alphabetical, recency): ");
         fgets(input, sizeof(input), stdin);
         printf("===================================================\n");
         input[strlen(input)-1] = '\0';

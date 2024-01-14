@@ -26,3 +26,4 @@ clean:
 	rm client
 	rm server
 	rm alphabetical
+	rm recency
