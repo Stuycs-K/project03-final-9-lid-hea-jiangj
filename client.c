@@ -196,57 +196,76 @@ int clientLogic(int server_socket, int filtered){
             sleep(1);
         }
     }
+    // check if the inputted command is [delete]
     else if(strcmp(input, "delete") == 0){
-        //make sure user has permissions
+        // make sure user has permissions
         
-        //delete post file
-        //delete title from forum.txt
-        //down data by 1
+        // delete post file
+        // delete title from forum.txt
+        // down data by 1
         char pid[BUFFER_SIZE];
         printf("===================================================\n");
+
+        // asks the user for which post they would like to delete and sends it to the server
         printf("Which post would you like to delete?(# only): ");
         fgets(input, sizeof(input), stdin);
         printf("===================================================\n");
         write(server_socket, input, sizeof(input));
+
+        // gets the client pid and sends it to the server
         sprintf(pid, "%d", getpid());
         write(server_socket, pid, sizeof(pid));
+
+        // reads from the server if the user has permission to delete the post
         read(server_socket, input, sizeof(input));
+
+        // the client does have permission to delete the file 
         if(strcmp(input, "NO") != 0) {
             printf("\t\tFILE DELETED\n===================================================\n"); 
             sleep(1);        
-        }   
+        }
+        // tells the client they don't have permission delete the post
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
             sleep(1);
         }
     }    
+    // check if the inputted command is [search]
     else if(strcmp(input, "search") == 0){
+        // prompts the user for a keyword to send to the server
         char keyword[BUFFER_SIZE];
         printf("what keyword would you like to search: ");
         fgets(keyword, sizeof(keyword), stdin);
         keyword[strlen(keyword)-1] = '\0';
         write(server_socket, keyword, sizeof(keyword));
+
+        // reads the forum filtered with the keyword from the server and prints it
         char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
         printf("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
 
-//        printf("results with [%s]: \n%s\n", keyword, filtered);
+        // ups the semaphore before sending and ending returning 1 to turn filtered status true
         sb.sem_op = 1;
         semop(semd, &sb, 1);
-//        printf("\n");
         return 1;
     }
+    // check if the inputted command is [sort]
     else if(strcmp(input, "sort") == 0){
         printf("===================================================\n");
+
+        // asks the user for which form of sort (alphabetical, recency) for the list and sends it to the server
         printf("How would you like your post sorted?(alphabetical, recency): ");
         fgets(input, sizeof(input), stdin);
         printf("===================================================\n");
         input[strlen(input)-1] = '\0';
         write(server_socket, input, sizeof(input));
+
+        // reads the server to see if the sort inserted is valid
         char reply[BUFFER_SIZE] = "";
         read(server_socket, reply, sizeof(reply));
         if(strcmp(reply, "NO") != 0){
+            // reads the sorted forum from the server and prints it
             char content[BUFFER_SIZE*3];
             read(server_socket, content, sizeof(content));
             clear();
@@ -257,12 +276,14 @@ int clientLogic(int server_socket, int filtered){
             return 1;
         }
         else{
+            // tells the client the inputed choice is invalid
             read(server_socket, reply, sizeof(reply));
             printf("\t\tINVALID CHOICE\n===================================================\n");
             sleep(1);
         }
     }
     else {
+        // tells the client the inputed choice is invalid
         printf("===================================================\n");
         printf("NOT A VALID COMMAND\n");
         printf("===================================================\n");
@@ -270,7 +291,6 @@ int clientLogic(int server_socket, int filtered){
     //upping semaphore
     sb.sem_op = 1;
     semop(semd, &sb, 1);
-//    printf("\n");
     return 0;
 
 }
