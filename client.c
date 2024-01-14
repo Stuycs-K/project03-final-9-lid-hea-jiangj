@@ -63,10 +63,11 @@ int clientLogic(int server_socket, int filtered){
     sb.sem_num = 0;
     sb.sem_flg = SEM_UNDO;
     sb.sem_op = -1;
-    semop(semd, &sb, 1);
+    // semop(semd, &sb, 1);
 
     // check if the inputted command is [post]
     if (strcmp(input,"post")==0) {
+        semop(semd, &sb, 1);
         printf("===================================================\n");
 
         // prompts the user for the title of the new post
@@ -93,8 +94,10 @@ int clientLogic(int server_socket, int filtered){
         data = shmat(shmid, 0, 0); //attach
         clear();
         printf("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
-        sleep(2);
+        sb.sem_op = 1;
+        semop(semd, &sb, 1);
         shmdt(data);
+        sleep(2);
     }
     // check if the inputted command is [view]
     else if (strcmp(input, "view") == 0) {
@@ -124,6 +127,7 @@ int clientLogic(int server_socket, int filtered){
 
         // check if the inputted command is [reply]
         if (strcmp(input, "reply") == 0) {
+            semop(semd, &sb, 1);
             // prompts the user to reply
             printf("Input a reply: ");
             fgets(input, sizeof(input), stdin);
@@ -132,6 +136,8 @@ int clientLogic(int server_socket, int filtered){
 
             // sends the reply to the server
             write(server_socket, input, sizeof(input));
+            sb.sem_op = 1;
+            semop(semd, &sb, 1);
         }
     }
     // check if the inputted command is [edit]
@@ -159,6 +165,7 @@ int clientLogic(int server_socket, int filtered){
         // the client does have permission to edit the post
         if(strcmp(input, "NO") != 0) {
             // reads the post content from the server and prints it
+            semop(semd, &sb, 1);
             char content[BUFFER_SIZE] = "";
             read(server_socket, content, sizeof(content));
             printf("Current content of p%s: \n%s", post_num, content);
@@ -181,11 +188,15 @@ int clientLogic(int server_socket, int filtered){
                 fgets(replacement,sizeof(replacement),stdin);
                 write(server_socket, replacement, sizeof(replacement));
                 printf("===================================================\n");
+                sb.sem_op = 1;
+                semop(semd, &sb, 1);
             }
             // the user doesn't have permission to edit the title/content 
             else{
                 read(server_socket, input, sizeof(input));
                 printf("%s", input);
+                sb.sem_op = 1;
+                semop(semd, &sb, 1);
                 sleep(1);
             }
         }
@@ -198,6 +209,7 @@ int clientLogic(int server_socket, int filtered){
     }
     // check if the inputted command is [delete]
     else if(strcmp(input, "delete") == 0){
+        semop(semd, &sb, 1);
         // make sure user has permissions
         
         // delete post file
@@ -222,12 +234,16 @@ int clientLogic(int server_socket, int filtered){
         // the client does have permission to delete the file 
         if(strcmp(input, "NO") != 0) {
             printf("\t\tFILE DELETED\n===================================================\n"); 
+            sb.sem_op = 1;
+            semop(semd, &sb, 1);
             sleep(1);        
         }
         // tells the client they don't have permission delete the post
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
+            sb.sem_op = 1;
+            semop(semd, &sb, 1);
             sleep(1);
         }
     }    
@@ -235,7 +251,8 @@ int clientLogic(int server_socket, int filtered){
     else if(strcmp(input, "search") == 0){
         // prompts the user for a keyword to send to the server
         char keyword[BUFFER_SIZE];
-        printf("what keyword would you like to search: ");
+        printf("===================================================\n");
+        printf("What keyword would you like to search: ");
         fgets(keyword, sizeof(keyword), stdin);
         keyword[strlen(keyword)-1] = '\0';
         write(server_socket, keyword, sizeof(keyword));
@@ -243,11 +260,10 @@ int clientLogic(int server_socket, int filtered){
         // reads the forum filtered with the keyword from the server and prints it
         char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
+        clear();
         printf("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
 
-        // ups the semaphore before sending and ending returning 1 to turn filtered status true
-        sb.sem_op = 1;
-        semop(semd, &sb, 1);
+        // returning 1 to turn filtered status true
         return 1;
     }
     // check if the inputted command is [sort]
@@ -271,8 +287,6 @@ int clientLogic(int server_socket, int filtered){
             clear();
             for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
             printf("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
-            sb.sem_op = 1;
-            semop(semd, &sb, 1);
             return 1;
         }
         else{
@@ -289,8 +303,8 @@ int clientLogic(int server_socket, int filtered){
         printf("===================================================\n");
     }
     //upping semaphore
-    sb.sem_op = 1;
-    semop(semd, &sb, 1);
+    // sb.sem_op = 1;
+    // semop(semd, &sb, 1);
     return 0;
 
 }
