@@ -35,7 +35,7 @@ HW: cfinished search function but still a bit buggy (cant use multiple inputs)
 
 ### 2024-01-12 to 15 - Brief description
 CW: worked on fixing search function to work for linux, issues with random portions of strings being attached
-HW: fixed search function and now the string is reset every time, cleaned up server.c and comment explained the functions
+HW: fixed search function and now the string is reset every time, cleaned up server.c and comment explained the functions, cleaned up networking.c, cleaned up client.c
 
 ## Player 2: Derek Li
 

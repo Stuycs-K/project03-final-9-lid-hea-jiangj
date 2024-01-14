@@ -1,8 +1,6 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
 
-// int filtered = 0;
-
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
         //removing semaphore
@@ -23,15 +21,19 @@ static void sighandler( int signo ) {
         exit(0);
     }
 }
+
+// clientLogic() function that takes in the server_socket and a filtered status
 int clientLogic(int server_socket, int filtered){
-//    printf("clientLogic reached\n");
-//    while(1){
+
     // Prompts the user for a string.
+
+    // gets the client PID and sends it to the server
     char pid_str[BUFFER_SIZE];
     int pid_int = getpid();
     sprintf(pid_str, "%d", pid_int);
     write(server_socket, pid_str, sizeof(pid_str));
     
+    // semaphore
     int semd;
     semd = semget(KEY, 1, 0);
     if(semd == -1){
@@ -40,46 +42,50 @@ int clientLogic(int server_socket, int filtered){
         exit(1);
     }
 
+    // reads the forum from the server
     char input[BUFFER_SIZE];
     read(server_socket, input, sizeof(input));
+    
+    // prints the forum if the filtered status is false
     if (filtered == 0){
         printf("MOST RECENT POSTS:\n===================================================\n");
         printf("%s===================================================\n", input);
     }
 
+    // prompts the user for a command (post, view, edit, delete, search, sort) and writes it to the server
     printf("Input a command (post, view, edit, delete, search, sort): ");
     fgets(input, sizeof(input), stdin);
     *strchr(input, '\n') = 0;
-//    printf("About to write\n");
     write(server_socket,input,sizeof(input));
-    // printf("If statement about to run\n");
-    // uping semaphore
-//    printf("Connecting to Server... This may take a moment.\n");
+    
+    // semaphore
     struct sembuf sb;
     sb.sem_num = 0;
     sb.sem_flg = SEM_UNDO;
     sb.sem_op = -1;
     semop(semd, &sb, 1);
-//    printf("Checking command\n");
+
+    // check if the inputted command is [post]
     if (strcmp(input,"post")==0) {
-        char content[BUFFER_SIZE];
-        // char pid_str[BUFFER_SIZE];
-        // int pid_int = getpid();
-        // printf("pid: %d\n", pid_int);
-        // sprintf(pid_str, "%d", pid_int);
         printf("===================================================\n");
+
+        // prompts the user for the title of the new post
         printf("Enter the title of your post: ");
         fgets(input, sizeof(input), stdin);
         printf("===================================================\n");
+
+        // prompts the user for the content of the new post
+        char content[BUFFER_SIZE];
         printf("Enter the content of your post: ");
         fgets(content,sizeof(content),stdin);
         printf("===================================================\n");
-        // printf("fgets: %s\n",input);
-        // Send the user input to the client.
+
+        // sends the post title, post content, and client pid to the server
         write(server_socket, input, sizeof(input));
         write(server_socket, content, sizeof(content));
         write(server_socket, pid_str, sizeof(pid_str));
-    // Read the modified string from the server
+
+        // reads and prints the new post sent from the server
         char post_content[BUFFER_SIZE*3];
         read(server_socket, post_content, sizeof(input));
         int *data;
@@ -89,12 +95,12 @@ int clientLogic(int server_socket, int filtered){
         printf("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
         sleep(2);
         shmdt(data);
-
-    // Prints the modified string
-    //        printf("%s", input);
     }
+    // check if the inputted command is [view]
     else if (strcmp(input, "view") == 0) {
         printf("===================================================\n");
+
+        // prompts the user for which post to view and sends it to the server
         printf("Which post would you like to view? (# only): ");
         fgets(input, sizeof(input), stdin);
         int num;
@@ -103,46 +109,62 @@ int clientLogic(int server_socket, int filtered){
         sprintf(post_name, "p%d", num);
         write(server_socket, post_name, sizeof(post_name));
 
+        // reads the post content from server and prints it
         char content[BUFFER_SIZE] = "";
         read(server_socket, content, sizeof(content));
         clear();
         printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
 
-        // Prompt for reply
+        // prompts the user to either [reply] or go [back] and sends it to the server
         printf("Input a command (reply, back): ");
         fgets(input, sizeof(input), stdin);
         printf("===================================================\n");
         input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
+        // check if the inputted command is [reply]
         if (strcmp(input, "reply") == 0) {
+            // prompts the user to reply
             printf("Input a reply: ");
             fgets(input, sizeof(input), stdin);
             printf("===================================================\n");
             input[strcspn(input, "\n")] = '\0';  // Remove newline character
+
+            // sends the reply to the server
             write(server_socket, input, sizeof(input));
-            // read(server_socket, input, sizeof(input));
-            // printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
         }
     }
+    // check if the inputted command is [edit]
     else if(strcmp(input, "edit") == 0){
         char pid[BUFFER_SIZE];
         printf("===================================================\n");
+
+        // promopts the user for a post to edit
         printf("Which post would you like to edit?(# only): ");
         fgets(input, sizeof(input), stdin);
         char post_num[BUFFER_SIZE];
         strcpy(post_num, input);
         post_num[strlen(post_num)-1] = '\0';
         printf("===================================================\n");
+        // sends the post number to the server
         write(server_socket, input, sizeof(input));
+
+        // sends the client PID to the server
         sprintf(pid, "%d", getpid());
         write(server_socket, pid, sizeof(pid));
+
+        // reads from the server if the user has permission to edit the post
         read(server_socket, input, sizeof(input));
+
+        // the client does have permission to edit the post
         if(strcmp(input, "NO") != 0) {
+            // reads the post content from the server and prints it
             char content[BUFFER_SIZE] = "";
             read(server_socket, content, sizeof(content));
             printf("Current content of p%s: \n%s", post_num, content);
             printf("===================================================\n");
+
+            // prompts the user for either [title] or [content] to edit and sends it to the server
             char choice[BUFFER_SIZE] = "";
             char replacement[BUFFER_SIZE] = "";
             printf("Would you like to edit the title or content of this post (title, content): ");
@@ -150,19 +172,24 @@ int clientLogic(int server_socket, int filtered){
             printf("===================================================\n");
             write(server_socket, choice, sizeof(choice));
 
+            // checks if the user has permission the change the title/content
             read(server_socket, input, sizeof(input));
+            // the user does have permission to edit the title/content
             if(strcmp(input, "NO") != 0) {
+                // prompts the user for a replacement for the title/content and sends it to the server
                 printf("What would you like to replace it with: ");
                 fgets(replacement,sizeof(replacement),stdin);
                 write(server_socket, replacement, sizeof(replacement));
                 printf("===================================================\n");
             }
+            // the user doesn't have permission to edit the title/content 
             else{
                 read(server_socket, input, sizeof(input));
                 printf("%s", input);
                 sleep(1);
             }
         }
+        // the client doesn't have permission to edit the post
         else{
             read(server_socket, input, sizeof(input));
             printf("%s", input);
@@ -250,23 +277,28 @@ int clientLogic(int server_socket, int filtered){
 
 
 int main(int argc, char *argv[] ) {
-//    printf("client online \n");
+    printf("client online \n");
+
     // checks for the IP of the server the client should connect to
     clear();
     char* IP = NULL;
     if(argc>1){
         IP=argv[1];
     }
+
+    // sets the forum display filtered status to false
     int filtered = 0;
+
     while(1){
-        char line[BUFFER_SIZE];
+
         // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
 
         // //creates shared memory
         // int shmid = shmget(KEY, sizeof(int), 0640);
         // int* data = shmat(shmid, 0, 0);
-
+        
+        // char line[BUFFER_SIZE];
         // char lines[5][BUFFER_SIZE];
         // int NUM_LINES = 5;
         // int line_nums[NUM_LINES];
@@ -308,8 +340,12 @@ int main(int argc, char *argv[] ) {
         // }
         // printf("===================================================\n");
         // fclose(forum1);
+        // 
         
+        // sets the forum filter display status to the the previous iteration of clientLogic()
         filtered = clientLogic(server_socket, filtered);
+
+        // clears the terminal if the filter display status is false
         if (filtered == 0){
             clear();
         }
