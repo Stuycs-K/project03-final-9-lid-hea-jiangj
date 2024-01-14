@@ -126,7 +126,7 @@ void subserver_logic(int client_socket){
             file_to_string(post_name, post_content);
             fflush(stdout);
             printf("Post content: %s",post_content);
-            write(client_socket, post_content, sizeof(post_content));
+            write(client_socket, post_content, strlen(post_content));
             read(client_socket, input, sizeof(input));
             if (strcmp(input, "reply") == 0){
                 char reply[BUFFER_SIZE*3];

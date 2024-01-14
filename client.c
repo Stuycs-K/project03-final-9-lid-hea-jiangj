@@ -217,10 +217,12 @@ void clientLogic(int server_socket){
         sscanf(input, "%d", &num);
         char post_name[BUFFER_SIZE];
         sprintf(post_name, "p%d", num);
+        refresh();
         write(server_socket, post_name, sizeof(post_name));
-
+        refresh();
         char content[BUFFER_SIZE];
         memset(content, 0, sizeof(content));
+        refresh();
         read(server_socket, content, sizeof(content));
         printw("content: %s",content);
         refresh();
