@@ -372,6 +372,7 @@ int clientLogic(int server_socket, int filtered){
                 strcat(replacement, "\n");
                 write(server_socket, replacement, sizeof(replacement));
                 printw("===================================================\n");
+                refresh();
                 sb.sem_op = 1;
                 semop(semd, &sb, 1);
             }
@@ -379,6 +380,7 @@ int clientLogic(int server_socket, int filtered){
             else{
                 read(server_socket, input, sizeof(input));
                 printw("%s", input);
+                refresh();
                 sb.sem_op = 1;
                 semop(semd, &sb, 1);
                 sleep(1);
@@ -388,6 +390,7 @@ int clientLogic(int server_socket, int filtered){
         else{
             read(server_socket, input, sizeof(input));
             printw("%s", input);
+            refresh();
             sleep(1);
         }
     }
@@ -426,90 +429,9 @@ int clientLogic(int server_socket, int filtered){
         }
         // tells the client they don't have permission delete the post
         else{
-            sprintf(post_name, "p%d", num);
-            int post = open(post_name, O_RDONLY, 0);
-            char* content;
-            file_to_string(post_name,content);
-            printw("Current content of %s: \n%s", post_name, content);
-            close(post);
-            printw("Would you like to edit the title or content of this post (title, content): ");
-            char choice[BUFFER_SIZE];
-            getstr(choice);
-            printw("What would you like to replace it with: ");
-            char replacement[BUFFER_SIZE];
-            getstr(replacement);
-
-            FILE *file, *tempFile;
-            char buffer[BUFFER_SIZE];
-            int lineToReplace = num; // The line number to replace
-            char *newLine = replacement; // The new line content
-            char replacement1[BUFFER_SIZE+10];
-            sprintf(replacement1,"p%d: %s",num,replacement);
-            char *newLine1 = replacement1;
-            int currentLine = 1;
-
-            if (strcmp(choice,"title\n")==0) {
-                file = fopen("forum.txt", "r");
-                tempFile = fopen("temp.txt", "w");
-
-                if (file == NULL || tempFile == NULL) {
-                    perror("Error opening file!\n");
-                }
-
-                // Read from the original file and write to the temporary file
-                while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
-                    // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == lineToReplace) {
-                        fputs(newLine1, tempFile);
-                    } else {
-                        // Otherwise, write the original line
-                        fputs(buffer, tempFile);
-                    }
-                    currentLine++;
-                }
-
-                // Close the files
-                fclose(file);
-                fclose(tempFile);
-
-                // Delete the original file and rename the temporary file to the original file name
-                remove("forum.txt");
-                rename("temp.txt", "forum.txt");
-            }
-            
-            else if (strcmp(choice,"content\n")==0) {
-                FILE * pFile = fopen(post_name, "r");
-                tempFile = fopen("temp.txt", "w");
-
-                memset(buffer,0,sizeof(buffer));
-                memset(replacement1,0,sizeof(replacement1));
-                sprintf(replacement1,"p%d: %s",num,replacement);
-                printw("Replacment: %s",replacement1);
-
-
-                currentLine = 1;
-
-                while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
-                    // If the current line is the line to replace, write the new line to the temp file
-                    if (currentLine == 1) {
-                        fputs(replacement1, tempFile);
-                    } else {
-                        // Otherwise, write the original line
-                        fputs(buffer, tempFile);
-                    }
-                    currentLine++;
-                }
-
-                fclose(pFile);
-                fclose(tempFile);
-
-                // Delete the original file and rename the temporary file to the original file name
-                remove(post_name);
-                rename("temp.txt", post_name);
-            }
-            else {
-                printw("Not a valid command!\n");
-            }
+            read(server_socket, input, sizeof(input));
+            printw("%s", input);
+            refresh();
             sb.sem_op = 1;
             semop(semd, &sb, 1);
             sleep(1);
