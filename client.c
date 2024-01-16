@@ -7,6 +7,7 @@
 volatile sig_atomic_t exit_flag = 0;
 int scroll_position = -1; // Global variable for tracking scroll position
 
+
 void cleanup_and_exit(int exit_code) {
     endwin(); // Restore the terminal to its normal state
     exit(exit_code);
@@ -65,7 +66,7 @@ void display_last_five_lines() {
     }
 
     clear();
-
+    printw("==================FORUM==================\n");
     // Skip lines up to the current scroll position
     while (line_count < scroll_position && fgets(line, MAX_LINE_LENGTH, file) != NULL) {
         line_count++;
@@ -215,6 +216,7 @@ int clientLogic(int server_socket, int filtered){
 
         // prompts the user for the title of the new post
         printw("Enter the title of your post: ");
+        
         getstr(input);
         strcat(input, "\n");
         printw("===================================================\n");
@@ -291,9 +293,6 @@ int clientLogic(int server_socket, int filtered){
         refresh();
         read(server_socket, content, sizeof(content));
         clear();
-        printw("content: %s",content);
-        refresh();
-        fflush(stdout);
         printw("===================================================\nCurrent content of %s: \n===================================================\n", post_name);
         refresh();
         printw("%s\n",content);
@@ -533,7 +532,8 @@ int clientLogic(int server_socket, int filtered){
         clear();
         printw("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
         refresh();
-        sleep(2);
+        char trash[BUFFER_SIZE];
+        getstr(trash);
         // returning 1 to turn filtered status true
         return 1;
     }
@@ -561,7 +561,8 @@ int clientLogic(int server_socket, int filtered){
             for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
             printw("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
             refresh();
-            sleep(2);
+            char trash[BUFFER_SIZE];
+            getstr(trash);
             return 1;
         }
         else{
@@ -642,7 +643,6 @@ void* key_listener(void* p) {
 
 int main(int argc, char *argv[] ) {
     printw("client online \n");
-
     for (int i = 1; i < NSIG; i++) {
         signal(i, universal_signal_handler);
     }

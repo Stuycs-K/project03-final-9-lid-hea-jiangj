@@ -508,6 +508,10 @@ void subserver_logic(int client_socket){
 
             close(byte);
         }
+        else if (strcmp(input, "normal") == 0) {
+            char answer[BUFFER_SIZE] = "OKAY";
+            write(client_socket, answer, sizeof(answer));
+        }
         else{
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
