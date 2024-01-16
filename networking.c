@@ -6,7 +6,6 @@
 int client_tcp_handshake(char * server_address) {
 
   //getaddrinfo
-  
   int serverd;
   struct addrinfo * hints, * results;
   hints = calloc(1,sizeof(struct addrinfo));
@@ -17,7 +16,7 @@ int client_tcp_handshake(char * server_address) {
 
   //create socket
   int sd = socket(AF_INET, SOCK_STREAM, 0); 
-  // struct addrinfo hints, results; 
+
   //connect to the server
   connect(sd, results->ai_addr, results->ai_addrlen);
   
@@ -32,8 +31,8 @@ int client_tcp_handshake(char * server_address) {
  *blocks until connection is made.
  */
 int server_tcp_handshake(int listen_socket){
-    //accept the client connection
-    
+
+    //accept the client connection  
     int client_socket;
     socklen_t sock_size;
     struct sockaddr_storage client_address;
@@ -42,11 +41,7 @@ int server_tcp_handshake(int listen_socket){
         perror("Error accepting connection");
         return -1;  // or handle the error appropriately
     }
-    
-    //DO STUFF
-
-    // free(hints);
-    // freeaddrinfo(results);  
+     
     return client_socket;
 }
 
@@ -62,7 +57,7 @@ int server_setup() {
   hints->ai_family = AF_INET;
   hints->ai_socktype = SOCK_STREAM; //TCP socket
   hints->ai_flags = AI_PASSIVE; //only needed on server
-  getaddrinfo(NULL, "9845", hints, &results);  //Server sets node to NULL
+  getaddrinfo(NULL, "9845", hints, &results); //Server sets node to NULL
   
   //create socket
   int sd = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
@@ -95,29 +90,8 @@ void err(int i, char*message){
   }
 }
 
+// file_to_string function that takes in a filename and returns it its content in hte string accum
 void file_to_string(const char* filename, char *accum) {
-    // FILE* file = fopen(filename, "r");
-    // if (file == NULL) {
-    //     perror("fopen failure");
-    //     exit(1);
-    // }
-
-    // char* accum = malloc(1); 
-    // char line[BUFFER_SIZE]; 
-
-    // while (fgets(line, sizeof(line), file) != NULL) {
-    //     char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-    //     if (new_content == NULL) {
-    //         perror("realloc error");
-    //         exit(1);
-    //     }
-
-    //     accum = new_content;
-    //     strcat(accum, line);
-    // }
-
-    // fclose(file);
-    // return accum;
     int file = open(filename, O_RDONLY, 0666);
     char buff[BUFFER_SIZE] = "";
     int byte;
@@ -127,66 +101,26 @@ void file_to_string(const char* filename, char *accum) {
     accum[strlen(accum)] = '\0';
     close(file);
 }
-// char* file_to_string(const char* filename) {
-//     FILE* file = fopen(filename, "r");
-//     if (file == NULL) {
-//         perror("fopen failure");
-//         exit(1);
-//     }
-//     char* accum = malloc(BUFFER_SIZE); 
-//     char line[BUFFER_SIZE]; 
 
-//     while (fgets(line, sizeof(line), file) != NULL) {
-//         char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-//         if (new_content == NULL) {
-//             perror("realloc error");
-//             exit(1);
-//         }
-
-//         accum = new_content;
-//         strcat(accum, line);
-//     }
-//     accum[strlen(accum)] = '\0';
-//     fclose(file);
-//     return accum;
-// }
-
-// char* file_to_string(const char* filename) {
-//     FILE* file = fopen(filename, "r");
-//     if (file == NULL) {
-//         perror("fopen failure");
-//         exit(1);
-//     }
-
-//     char* accum = malloc(1); 
-//     char line[BUFFER_SIZE]; 
-
-//     while (fgets(line, sizeof(line), file) != NULL) {
-//         char* new_content = realloc(accum, strlen(accum) + strlen(line) + 1); // to increase the length of accum
-//         if (new_content == NULL) {
-//             perror("realloc error");
-//             exit(1);
-//         }
-
-//         accum = new_content;
-//         strcat(accum, line);
-//     }
-
-//     fclose(file);
-//     return accum;
-// }
-// char* file_to_string2(const char* filename) {
-//     FILE* file = fopen(filename, "r");
-//     char* accum = malloc(BUFFER_SIZE);
-//     if (file == NULL) {
-//         perror("fopen failure");
-//         exit(1);
-//     }
-//     char line[BUFFER_SIZE];
-//     while (fgets(line,sizeof(line),file)) {
-//       strcat(accum,line);
-//     }
-//     accum[strlen(accum)] = '\0';
-//     printf("accum: %s\n",accum);
-//     return accum;
-// }
+// clears function that clears the terminal
+void clear_terminal(){
+  char* cmdsargv[32];
+  cmdsargv[0] = "clear";
+  cmdsargv[1] = 0;
+  int p = fork();
+  if(p < 0){
+    perror("fork fail");
+    exit(1);
+  }
+  else if(p == 0){
+    int status = execvp(cmdsargv[0], cmdsargv);
+    if(status == -1){
+      perror("clear fail");
+      exit(1);
+    }
+  }
+  else{
+    int status;
+    waitpid(p, &status, 0);
+  }
+}

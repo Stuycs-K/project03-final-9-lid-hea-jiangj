@@ -29,6 +29,14 @@ HW: worked on formating issues and finished name tags
 CW: worked on file_to_string to work on linux servers, changed forum display to all posts rather than recent
 HW: cleaned up code and reset forum file to have files attached to each post, started workin gon a search function, cleaned up the code
 
+### 2024-01-11 - Brief description
+CW: worked on search function to use keywords for the server to send back a string with posts containing the keyword
+HW: cfinished search function but still a bit buggy (cant use multiple inputs)
+
+### 2024-01-12 to 15 - Brief description
+CW: worked on fixing search function to work for linux, issues with random portions of strings being attached
+HW: fixed search function and now the string is reset every time, cleaned up server.c and comment explained the functions, cleaned up networking.c, cleaned up client.c
+
 ## Player 2: Derek Li
 
 ### 2024-01-02 - Brief description
@@ -53,9 +61,25 @@ WORK: worked on functions that allows the client user to read and edit the indiv
 CW: brainstormed what logistics would be used to establish permission for editing certain posts in our program. debated between using created a shared memory of structs that contains process pid and file number or a share memory array of ints; decided on shared memory array of int after researching and learning shared memory cannot share malloc'ed. established basic code for permission access
 HW: implemeneted constant prompting by the client to prevent pid from changing. added permissions via shared memory of an array of ints that contains the process pid for each client and checks to see whether the client process that's trying to access the post has the same pid as the one who created it
 
-### 2024-01-08
+### 2024-01-09 - Brief description
 CW: re-implemented semaphores to prevent shared memory issues when creating posts from two different clients. began transferring client logic to server logic for editing functions to make the program more aligned with the server client base.
 HW: succesffuly transferred client logic for editing to server side and debugged issue with permissions not found earlier regarding client pid not being transferred properly. encountered error with editing and viewing when trying to view file content (working on)
+
+### 2024-01-10 - Brief description
+CW: fixed error when reading from files and seeing random special characters due to issues regarding memory allocation. debugged view function error regarding strings not resetting properly and printing out data from previous strings. began work on fixing edit bugs
+HW: bebugged edit functon bug regarding content not being overwritten properly.
+
+### 2024-01-11 - Brief description
+CW: modifed strings throughout program to create neater displays on the terminal (still working). created a clear function that utilizes forking and execvp to clear the terminal so that the display of our program is more similar to reddit. began work on sorting function for the title names of out posts
+HW: continued working on implementing neater formatting and clear throughout the program so that the user display is more similar to reddit. successfully sorted title posts alphabetically and into a new text file (still needs work).
+
+### 2024-01-12 - Brief description
+CW: finished sorting function for alphabetical format and started started brainstorming how to develop sorting function for most recently modified. brushed up on some more formatting
+HW: continued brushing up on formatting for display in terminal and debugged certain test cases in post and view function when user inputs unspecificed data
+
+### 2024-01-13 - Brief description
+WORK: completed neat formatting in terminal for edit, delete, search, and sort as well as debugging unspecificed user input test cases for all functions. completed sorting by most recently modified posts utilizing the stat library and the st_mtime field to re-arrange the posts in order of most recently modified. planning on revisiting semaphores for better implemenatation.
+
 
 ## Player 3: Jack Jiang
 
@@ -92,3 +116,10 @@ HW: Spent like 4 hours working on ncurses and changed stuff like printf to print
 
 ### 2024-01-10 - Brief description
 CW: Discussed ncurses with Mr. K. Got delete feature to work.
+
+HW: Polished delete feature, made sure data (# of posts) was decremented as a post was deleted. Fixed problem with how forum wouldn't be updated to the client after deleting a post. Used waitpid(). Worked on merging main with ncurses in the extra branch. Plan to merge the extra branch with main after essentials of project are done. On extra branch worked on fixing errors that came from merging. Fixed write/read errors from client and typing errors.
+
+### 2024-01-11 - Brief description
+CW: Fixed small part of edit component. Worked on ncurses for view command. 
+
+HW: Changed what search function returned, so it wouldn't cause an error. Continuted to work on ncurses. Merged ncurses w/ main and fixed errors that arose from that. Read ncurses doc and started working on getting it to work with edit command.
