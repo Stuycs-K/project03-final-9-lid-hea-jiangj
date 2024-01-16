@@ -84,48 +84,49 @@ WORK: completed neat formatting in terminal for edit, delete, search, and sort a
 ## Player 3: Jack Jiang
 
 ### 2024-01-02 - Brief description
-CW/HW: found group members and thought/discussed of project ideas 
+CW/HW: found group members and thought/discussed of project ideas - 2:49 PM
 
 ### 2024-01-03 - Brief description
-CW: brainstormed/discussed project ideas like monopoly, battleship, and eventually decided on reddit. Asked questions/approval from Mr. K
-HW: worked on timemline and project breakdown in PROPOSAL.md
+CW: brainstormed/discussed project ideas like monopoly, battleship, and eventually decided on reddit. Asked questions/approval from Mr. K  - 2:51 PM
+HW: worked on timemline and project breakdown in PROPOSAL.md  - 5:23 PM
 
 ### 2024-01-04 Brief Description
-CW: brainstormed logistics of project. Decided on multiple file system, where each post + its replies would be its own file. Also decided to do a client-server system, where client can only access its own post (file). All displaying of the forum will be in the client, the server will handle processing data. Added networking.c file from lab 16 as reference. Added empty server.c and client.c files. Made own branch and linked with remote branch.
+CW: brainstormed logistics of project. Decided on multiple file system, where each post + its replies would be its own file. Also decided to do a client-server system, where client can only access its own post (file). All displaying of the forum will be in the client, the server will handle processing data. Added networking.c file from lab 16 as reference. Added empty server.c and client.c files. Made own branch and linked with remote branch.  - 2:51 PM
 
 HW: Worked on adding posts to forum.txt so that each post would have p(n) where n is a number based on the number of that post. So the first post in forum.txt would have p1, the second would have p2 and so on. I used shared memory to store the number of questions in forum.txt by first looping through forum.txt and saving it, and then using that memory to decide what number to put before a post. I used signals to delete the shared memory once you exited the server/session. Now anything the user types in is prefaced by p<post #>. 
+- 5:50 PM
 
 ### 2024-01-05 - Brief description
-CW: Worked on displaying the last 3 lines from the forum in client. Cleaned up garbage strings that came along with posts.
+CW: Worked on displaying the last 3 lines from the forum in client. Cleaned up garbage strings that came along with posts. - 2:50 PM
 
-HW: Edited semaphores and memory to account for number of posts and worked on controlling user acces when two users make a post at the same time.
+HW: Edited semaphores and memory to account for number of posts and worked on controlling user acces when two users make a post at the same time. - 5:43 PM
 
 ### 2024-01-7 - Brief description
-HW: Editing feature now allows users to replace specific posts based on number inputted. It replaces the post in forum.txt and the post file created. I did this creating a temp.txt file and renaming it. I will try to work on displaying the forum posts to the client to make it look better.
+WORK: Editing feature now allows users to replace specific posts based on number inputted. It replaces the post in forum.txt and the post file created. I did this creating a temp.txt file and renaming it. I will try to work on displaying the forum posts to the client to make it look better.  - 4:34 PM
 
 
 ### 2024-01-8 - Brief description
-CW: Changed editing feature so that it you can edit the title and content of a post separately. Forum asks user if they want to change title or content. Worked on getting data from posts.
+CW: Changed editing feature so that it you can edit the title and content of a post separately. Forum asks user if they want to change title or content. Worked on getting data from posts. - 2:52 PM
 
-HW: Worked on displaying forum in the terminal to the client side. The terminal displays the last 4 post titles to the client. If the a new post is updated, the forum shown to the client is updated. Will work on implementing scrolling with the up and down key.
+HW: Worked on displaying forum in the terminal to the client side. The terminal displays the last 4 post titles to the client. If the a new post is updated, the forum shown to the client is updated. Will work on implementing scrolling with the up and down key. - 6:19 PM
 
 ### 2024-01-9 - Brief description
-CW: Worked on implementing ncurses. Installed ncurses on my local machine. Started working on checking up and down arrows.
+CW: Worked on implementing ncurses. Installed ncurses on my local machine. Started working on checking up and down arrows.  - 2:50 PM
 
-HW: Spent like 4 hours working on ncurses and changed stuff like printf to printw and fgets to getstr and used getch and stuff. Faced a lot of errors with actually implementing the scrolling but did that. However only implemented scrolling on the command prompt where it asks the user for a command. Need to add that to other parts like posts, replies, just any other part where it asks the user for input. Added it to an extra branch (called extra) because it was too much code to merge main with and too complex to work on for now. Will work on implementing it later if have time.
+HW: Spent like 4 hours working on ncurses and changed stuff like printf to printw and fgets to getstr and used getch and stuff. Faced a lot of errors with actually implementing the scrolling but did that. However only implemented scrolling on the command prompt where it asks the user for a command. Need to add that to other parts like posts, replies, just any other part where it asks the user for input. Added it to an extra branch (called extra) because it was too much code to merge main with and too complex to work on for now. Will work on implementing it later if have time.  - 7:01 PM
 
 ### 2024-01-10 - Brief description
-CW: Discussed ncurses with Mr. K. Got delete feature to work.
+CW: Discussed ncurses with Mr. K. Got delete feature to work.   - 2:52 PM
 
-HW: Polished delete feature, made sure data (# of posts) was decremented as a post was deleted. Fixed problem with how forum wouldn't be updated to the client after deleting a post. Used waitpid(). Worked on merging main with ncurses in the extra branch. Plan to merge the extra branch with main after essentials of project are done. On extra branch worked on fixing errors that came from merging. Fixed write/read errors from client and typing errors.
+HW: Polished delete feature, made sure data (# of posts) was decremented as a post was deleted. Fixed problem with how forum wouldn't be updated to the client after deleting a post. Used waitpid(). Worked on merging main with ncurses in the extra branch. Plan to merge the extra branch with main after essentials of project are done. On extra branch worked on fixing errors that came from merging. Fixed write/read errors from client and typing errors.    - 6:43 PM
 
 ### 2024-01-11 - Brief description
-CW: Fixed small part of edit component. Worked on ncurses for view command. 
+CW: Fixed small part of edit component. Worked on ncurses for view command.     - 2:51 PM
 
-HW: Changed what search function returned, so it wouldn't cause an error. Continuted to work on ncurses. Merged ncurses w/ main and fixed errors that arose from that. Read ncurses doc and started working on getting it to work with edit command.
+HW: Changed what search function returned, so it wouldn't cause an error. Continuted to work on ncurses. Merged ncurses w/ main and fixed errors that arose from that. Read ncurses doc and started working on getting it to work with edit command.    - 7:32 PM
 
 ### 2024-01-12 - Brief description
-CW: 
+CW: Worked on README.md and ncurses branch. Fixed errors that arose when trying to take in input - such as characters overlapping when typing, client crashing multiple times and more.     - 2:51 PM
 
 ### 2024-01-15/16 - Brief description
-WORK: Worked on integrating main with extra branch. Got the scrolling function to work without errors for the multiple commands and clients. Changed fgets() to getstr() and changed all the printf() to printw(). Added refreshes() 
+WORK: Worked on integrating main with extra branch. Got the scrolling function to work without errors for the multiple commands and clients. Changed fgets() to getstr() and changed all the printf() to printw(). Added refreshes(). Worked on integrating ncurses threads and screen reading with input and semaphore permissions. Added to README.md.    - 1:30 AM
