@@ -501,7 +501,6 @@ int clientLogic(int server_socket, int filtered){
         printw("===================================================\n");
         printw("NOT A VALID COMMAND\n");
         printw("===================================================\n");
-        printw("Not a valid command!\n");
     }
     //downing semaphore
     // sb.sem_op = 1;
@@ -573,7 +572,7 @@ int main(int argc, char *argv[] ) {
 
     // checks for the IP of the server the client should connect to
     clear();
-    char* IP = NULL;
+    char* IP = "127.0.0.1";
     initscr();
     cbreak();
     // noecho();
