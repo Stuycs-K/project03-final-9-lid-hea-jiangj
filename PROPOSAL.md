@@ -42,8 +42,8 @@ What data structures you will be using and how.
 What algorithms and /or data structures you will be using, and how.
 
 1. we will utilize sockets and pipes to allow for networking across our forum from multiple locations via server and client functions
-2. we will utilize programs in <dirent.h> to manage files that contain the contents of each post
-3. we will utilize semaphores to prevent issues when multiple users attempt to reply to a post
+2. we will utilize programs to manage files that contain the contents and replies of each post
+3. we will utilize semaphores to prevent issues when multiple users attempt to modify the same posts or shared memory
 4. we will utilize programs in <sys/stat.h> to sort the files that contain the content of each post
 5. we will utilize signals to allow the user to perform certain actions like closing, deleting, creating, etc.
 6. we will utilize processes like forking to create a child process when modifying content in the forum on the server side
@@ -52,9 +52,9 @@ Project Breakdown:
 
 1. Displaying the forum in the terminal - Alvin, Jack, Derek
 2. Implementing posts + replies - Alvin, Jack, Derek
-3. Sort Posts - Alvin
+3. Sort Posts - Derek
 4. Delete/Edit posts - Jack
-5. Search Posts - Derek
+5. Search Posts - Alvin
 
 
 # Intended pacing:
