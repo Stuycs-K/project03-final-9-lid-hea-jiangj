@@ -126,3 +126,6 @@ HW: Changed what search function returned, so it wouldn't cause an error. Contin
 
 ### 2024-01-12 - Brief description
 CW: 
+
+### 2024-01-15/16 - Brief description
+WORK: Worked on integrating main with extra branch. Got the scrolling function to work without errors for the multiple commands and clients. Changed fgets() to getstr() and changed all the printf() to printw(). Added refreshes() 

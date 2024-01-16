@@ -103,7 +103,7 @@ void file_to_string(const char* filename, char *accum) {
 }
 
 // clears function that clears the terminal
-void clear(){
+void clear_terminal(){
   char* cmdsargv[32];
   cmdsargv[0] = "clear";
   cmdsargv[1] = 0;
