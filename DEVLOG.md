@@ -123,3 +123,6 @@ HW: Polished delete feature, made sure data (# of posts) was decremented as a po
 CW: Fixed small part of edit component. Worked on ncurses for view command. 
 
 HW: Changed what search function returned, so it wouldn't cause an error. Continuted to work on ncurses. Merged ncurses w/ main and fixed errors that arose from that. Read ncurses doc and started working on getting it to work with edit command.
+
+### 2024-01-12 - Brief description
+CW: 

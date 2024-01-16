@@ -80,7 +80,9 @@ void subserver_logic(int client_socket){
         read(client_socket, pid_str, sizeof(pid_str));
         sscanf(pid_str, "%d", &pid_int);
         printf("Input received: %s\n",input);
-
+        // sleep(3);
+        printf("Content received: %s\n",content);
+        // sleep(3);
         //shared data
         int *data;
         int shmid;
@@ -97,6 +99,9 @@ void subserver_logic(int client_socket){
         // creates the post in the format [p#: TITLE], writes it in the forum, and prints it
         char new_input[BUFFER_SIZE+10] = "";
         sprintf(new_input, "p%d: %s", i ,input);
+        printf("new_input: %s\n",new_input);
+        // printf("%ld\n",strlen(new_input));
+        //write to forum.txt
         write(forum, new_input, strlen(new_input));
         printf("[post created] %s \n", new_input);
         
@@ -134,7 +139,11 @@ void subserver_logic(int client_socket){
         if (post >= 0){
             // sends the post file content as a string to the client
             char post_content[BUFFER_SIZE];
+            memset(post_content, 0, sizeof(post_content));
+            printf("POst_name: %s",post_name);
             file_to_string(post_name, post_content);
+            fflush(stdout);
+            printf("Post content: %s",post_content);
             write(client_socket, post_content, strlen(post_content));
             // checks for the next inputted client command ([reply] or [back])
             read(client_socket, input, sizeof(input));
@@ -208,6 +217,7 @@ void subserver_logic(int client_socket){
             // displays the post to the client
             file_to_string(post_name, content);
             write(client_socket, content, sizeof(content));
+            printf("Wrote post to client\n");
             close(post);
             
             // changes the post title or post content based on client input
@@ -498,6 +508,10 @@ void subserver_logic(int client_socket){
 
             close(byte);
         }
+        else if (strcmp(input, "normal") == 0) {
+            char answer[BUFFER_SIZE] = "OKAY";
+            write(client_socket, answer, sizeof(answer));
+        }
         else{
             char answer[BUFFER_SIZE] = "NO";
             write(client_socket, answer, sizeof(answer));
@@ -510,7 +524,10 @@ void subserver_logic(int client_socket){
         printf("Not a valid command!\n");
     }
     close(forum);
+
+
 }
+
 
 int main(int argc, char *argv[] ) {
     printf("SERVER ONLINE\n===================================================\n");

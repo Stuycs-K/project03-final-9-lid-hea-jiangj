@@ -1,5 +1,130 @@
 #include "networking.h"
 #define MAX_LINE_LENGTH 1024
+#define LINES_PER_PAGE 5
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#include <pthread.h> 
+
+volatile sig_atomic_t exit_flag = 0;
+int scroll_position = -1; // Global variable for tracking scroll position
+
+
+void cleanup_and_exit(int exit_code) {
+    endwin(); // Restore the terminal to its normal state
+    exit(exit_code);
+}
+
+// void sig_handler(int signo) {
+//     if (signo == SIGINT) {
+//         exit_flag = 1;
+//         endwin();
+//         cleanup_and_exit(0); // Clean exit
+//     }
+//     else if (signo == SIGSEGV) {
+//         fprintf(stderr, "Caught signal %d\n", signo);
+//         endwin();
+//         cleanup_and_exit(1); // Clean exit
+//     }
+// }
+
+void universal_signal_handler(int signo) {
+    fprintf(stderr, "Caught signal %d (%s)\n", signo, strsignal(signo));
+    endwin();
+    exit(1);
+}
+
+void display_last_five_lines() {
+    FILE *file;
+    char line[MAX_LINE_LENGTH];
+    int line_count = 0, total_lines = 0;
+
+    file = fopen("forum.txt", "r");
+    if (file == NULL) {
+        perror("Error opening forum file");
+        endwin(); // Restore the terminal to its normal state
+
+        exit(1);
+    }
+
+    // Count total number of lines if scroll_position is not set
+    if (scroll_position == -1) {
+        while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+            total_lines++;
+        }
+        scroll_position = MAX(0, total_lines - LINES_PER_PAGE);
+        rewind(file);
+    } else {
+        // Re-count total lines each time to account for any new lines added
+        while (fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+            total_lines++;
+        }
+        rewind(file);
+
+        // Ensure scroll_position does not exceed the limit
+        if (scroll_position > total_lines - LINES_PER_PAGE) {
+            scroll_position = MAX(0, total_lines - LINES_PER_PAGE);
+        }
+    }
+
+    clear();
+    printw("==================FORUM==================\n");
+    // Skip lines up to the current scroll position
+    while (line_count < scroll_position && fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+        line_count++;
+    }
+
+    // Read and display the next LINES_PER_PAGE lines
+    int displayed_lines = 0;
+    while (displayed_lines < LINES_PER_PAGE && fgets(line, MAX_LINE_LENGTH, file) != NULL) {
+        printw("%s", line);
+        displayed_lines++;
+    }
+
+    refresh();
+    fclose(file);
+}
+
+void prompt_and_input(char prompt[], char input[], int input_pos) {
+    int prompt_len = strlen(prompt);
+    printw("%s",prompt);
+    int prompt_end_pos = getcurx(stdscr); // Store the cursor position at the end of the prompt
+    refresh();
+
+    int ch;
+    while ((ch = getch()) != '\n') {
+        if (ch == KEY_UP || ch == KEY_DOWN) {
+            // Handling scrolling
+            if (ch == KEY_UP) scroll_position = MAX(0, scroll_position - 1);
+            if (ch == KEY_DOWN) scroll_position++; // Add bounds check if needed
+            display_last_five_lines();
+            printw("%s%s", prompt, input); // Redraw the prompt and input
+            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+        else if ((ch == KEY_BACKSPACE || ch == 127) && input_pos > 0) {
+            // Handling backspace
+            input_pos--;
+            input[input_pos] = '\0';
+            // Clear and redraw the line
+            // move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            clrtoeol(); // Clear the line
+            printw("\b"); // Redraw the prompt and the input
+            move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+        else if (input_pos < BUFFER_SIZE - 1 && isprint(ch)) {
+            // Handling character input
+            input[input_pos] = ch;
+            input_pos++;
+            // // Redraw the input
+            // move(getcury(stdscr), 0); // Move cursor to the start of the current line
+            // clrtoeol(); // Clear the line
+            printw("%c", input[input_pos]); // Redraw the prompt and the input
+            // move(getcury(stdscr), prompt_end_pos + input_pos); // Correctly position the cursor
+            refresh();
+        }
+    }
+    input[input_pos] = '\0'; // Null-terminate the input string
+}
 
 static void sighandler( int signo ) {
     if (signo == SIGINT) {
@@ -16,8 +141,9 @@ static void sighandler( int signo ) {
         int shmid02;
         shmid02 = shmget(KEY02, MAX_FILES*sizeof(int), IPC_CREAT | 0640);
         shmctl(shmid02, IPC_RMID, 0);
-
-        printf("SEGMENT & SHARED MEMORY REMOVED\n");
+        exit_flag = 1;
+        endwin();
+        printw("SEGMENT & SHARED MEMORY REMOVED\n");
         exit(0);
     }
 }
@@ -29,33 +155,51 @@ int clientLogic(int server_socket, int filtered){
 
     // gets the client PID and sends it to the server
     char pid_str[BUFFER_SIZE];
+    int ch;
+    int input_pos = 0;
     int pid_int = getpid();
     sprintf(pid_str, "%d", pid_int);
     write(server_socket, pid_str, sizeof(pid_str));
-    
+    char input[BUFFER_SIZE];
+    char forum[BUFFER_SIZE];
+    memset(input, 0, sizeof(input));
+    input_pos = 0;
+    char prompt[] = "Input a command (post, view, edit, delete, search, sort): ";
+
+    prompt_and_input(prompt,input,input_pos);
+
+    if (strcmp(input, "exit") == 0) {
+        exit_flag = 1;
+        endwin();
+        exit(0);
+    }
     // semaphore
     int semd;
     semd = semget(KEY, 1, 0);
     if(semd == -1){
-        printf("error %d: %s\n", errno, strerror(errno));
-        printf("Semaphore Does Not Yet Exist\n");
+        printw("error %d: %s\n", errno, strerror(errno));
+        printw("Semaphore Does Not Yet Exist\n");
+        endwin();
         exit(1);
     }
 
     // reads the forum from the server
-    char input[BUFFER_SIZE];
-    read(server_socket, input, sizeof(input));
+    read(server_socket, forum, sizeof(forum));
     
     // prints the forum if the filtered status is false
     if (filtered == 0){
-        printf("MOST RECENT POSTS:\n===================================================\n");
-        printf("%s===================================================\n", input);
+        printw("MOST RECENT POSTS:\n===================================================\n");
+        printw("%s===================================================\n", forum);
+        printw("\n");
     }
+    refresh();
+    // memset(input, 0, sizeof(input));
+    // read(server_socket, input, sizeof(input));
+    // printw("%s", input);
 
     // prompts the user for a command (post, view, edit, delete, search, sort) and writes it to the server
-    printf("Input a command (post, view, edit, delete, search, sort): ");
-    fgets(input, sizeof(input), stdin);
-    *strchr(input, '\n') = 0;
+    // printw("\nInput a command (post, view, edit, delete, search, sort): ");
+    // getstr(input);
     write(server_socket,input,sizeof(input));
     
     // semaphore
@@ -68,23 +212,49 @@ int clientLogic(int server_socket, int filtered){
     // check if the inputted command is [post]
     if (strcmp(input,"post")==0) {
         semop(semd, &sb, 1);
-        printf("===================================================\n");
+        clrtoeol(); // Clear the line
 
         // prompts the user for the title of the new post
-        printf("Enter the title of your post: ");
-        fgets(input, sizeof(input), stdin);
-        printf("===================================================\n");
+        printw("Enter the title of your post: ");
+        
+        getstr(input);
+        strcat(input, "\n");
+        printw("===================================================\n");
 
         // prompts the user for the content of the new post
         char content[BUFFER_SIZE];
-        printf("Enter the content of your post: ");
-        fgets(content,sizeof(content),stdin);
-        printf("===================================================\n");
-
+        printw("Enter the content of your post: ");
+        getstr(content);
+        strcat(content, "\n");
+        printw("===================================================\n");
+        fflush(stdout);
         // sends the post title, post content, and client pid to the server
         write(server_socket, input, sizeof(input));
+        refresh();
         write(server_socket, content, sizeof(content));
+        refresh();
         write(server_socket, pid_str, sizeof(pid_str));
+        refresh();
+        printw("Hello!\n");
+        // semop(semd, &sb, 1);
+        refresh();
+        memset(input, 0, sizeof(input));
+        memset(content, 0, sizeof(content));
+        clrtoeol(); // Clear the line
+        refresh();
+        fflush(stdout);
+
+        // Check if the socket is still valid
+        if (server_socket < 0) {
+            printw("Socket error before sending data.\n");
+            refresh();
+            endwin();
+            exit(1);
+        }
+
+
+        printw("Post sent successfully.\n");
+        refresh();
 
         // reads and prints the new post sent from the server
         char post_content[BUFFER_SIZE*3];
@@ -93,7 +263,8 @@ int clientLogic(int server_socket, int filtered){
         int shmid = shmget(KEY, sizeof(int), IPC_CREAT | 0640);
         data = shmat(shmid, 0, 0); //attach
         clear();
-        printf("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
+        printw("===================================================\nCurrent content of p%d: \n%s\n===================================================\n", *data, post_content);
+        refresh();
         sb.sem_op = 1;
         semop(semd, &sb, 1);
         shmdt(data);
@@ -101,38 +272,46 @@ int clientLogic(int server_socket, int filtered){
     }
     // check if the inputted command is [view]
     else if (strcmp(input, "view") == 0) {
-        printf("===================================================\n");
+        printw("===================================================\n");
 
         // prompts the user for which post to view and sends it to the server
-        printf("Which post would you like to view? (# only): ");
-        fgets(input, sizeof(input), stdin);
+        char prompt[] = "Which post would you like to view? (# only): ";
+        char input[BUFFER_SIZE];
+        memset(input, 0, sizeof(input));
+        input_pos = 0;
+        prompt_and_input(prompt,input,input_pos);
         int num;
         sscanf(input, "%d", &num);
         char post_name[BUFFER_SIZE] = "";
         sprintf(post_name, "p%d", num);
+        refresh();
         write(server_socket, post_name, sizeof(post_name));
-
+        refresh();
         // reads the post content from server and prints it
-        char content[BUFFER_SIZE] = "";
+        char content[BUFFER_SIZE];
+        memset(content, 0, sizeof(content));
+        refresh();
         read(server_socket, content, sizeof(content));
         clear();
-        printf("===================================================\nCurrent content of %s: \n%s\n===================================================\n", post_name, content);
-
+        printw("===================================================\nCurrent content of %s: \n===================================================\n", post_name);
+        refresh();
+        printw("%s\n",content);
+        refresh();
         // prompts the user to either [reply] or go [back] and sends it to the server
-        printf("Input a command (reply, back): ");
-        fgets(input, sizeof(input), stdin);
-        printf("===================================================\n");
-        input[strcspn(input, "\n")] = '\0';  // Remove newline character
+        printw("Input a command (reply, back): ");
+        getstr(input);
+        printw("===================================================\n");
+        // input[strcspn(input, "\n")] = '\0';  // Remove newline character
         write(server_socket, input, sizeof(input));
 
         // check if the inputted command is [reply]
         if (strcmp(input, "reply") == 0) {
             semop(semd, &sb, 1);
             // prompts the user to reply
-            printf("Input a reply: ");
-            fgets(input, sizeof(input), stdin);
-            printf("===================================================\n");
-            input[strcspn(input, "\n")] = '\0';  // Remove newline character
+            printw("Input a reply: ");
+            getstr(input);
+            printw("===================================================\n");
+            // input[strcspn(input, "\n")] = '\0';  // Remove newline character
 
             // sends the reply to the server
             write(server_socket, input, sizeof(input));
@@ -143,15 +322,16 @@ int clientLogic(int server_socket, int filtered){
     // check if the inputted command is [edit]
     else if(strcmp(input, "edit") == 0){
         char pid[BUFFER_SIZE];
-        printf("===================================================\n");
+        printw("===================================================\n");
 
         // promopts the user for a post to edit
-        printf("Which post would you like to edit?(# only): ");
-        fgets(input, sizeof(input), stdin);
+        printw("Which post would you like to edit?(# only): ");
+        getstr(input);
+        strcat(input, "\n");
         char post_num[BUFFER_SIZE];
         strcpy(post_num, input);
         post_num[strlen(post_num)-1] = '\0';
-        printf("===================================================\n");
+        printw("===================================================\n");
         // sends the post number to the server
         write(server_socket, input, sizeof(input));
 
@@ -163,38 +343,42 @@ int clientLogic(int server_socket, int filtered){
         read(server_socket, input, sizeof(input));
 
         // the client does have permission to edit the post
-        if(strcmp(input, "NO") != 0) {
+        if(strcmp(input, "YES") == 0) {
             // reads the post content from the server and prints it
             semop(semd, &sb, 1);
             char content[BUFFER_SIZE] = "";
             read(server_socket, content, sizeof(content));
-            printf("Current content of p%s: \n%s", post_num, content);
-            printf("===================================================\n");
-
+            clear();
+            printw("Current content of p%s: \n%s", post_num, content);
+            printw("===================================================\n");
+            refresh();
             // prompts the user for either [title] or [content] to edit and sends it to the server
-            char choice[BUFFER_SIZE] = "";
-            char replacement[BUFFER_SIZE] = "";
-            printf("Would you like to edit the title or content of this post (title, content): ");
-            fgets(choice,sizeof(choice),stdin);
-            printf("===================================================\n");
+            char choice[BUFFER_SIZE];
+            char replacement[BUFFER_SIZE];
+            printw("Would you like to edit the title or content of this post (title, content): ");
+            refresh();
+            getstr(choice);
+            strcat(choice, "\n");
+            printw("===================================================\n");
             write(server_socket, choice, sizeof(choice));
 
             // checks if the user has permission the change the title/content
             read(server_socket, input, sizeof(input));
             // the user does have permission to edit the title/content
-            if(strcmp(input, "NO") != 0) {
+            if(strcmp(input, "YES") == 0) {
                 // prompts the user for a replacement for the title/content and sends it to the server
-                printf("What would you like to replace it with: ");
-                fgets(replacement,sizeof(replacement),stdin);
+                printw("What would you like to replace it with: ");
+                getstr(replacement);
+                strcat(replacement, "\n");
                 write(server_socket, replacement, sizeof(replacement));
-                printf("===================================================\n");
+                printw("===================================================\n");
                 sb.sem_op = 1;
                 semop(semd, &sb, 1);
             }
             // the user doesn't have permission to edit the title/content 
             else{
                 read(server_socket, input, sizeof(input));
-                printf("%s", input);
+                printw("%s", input);
                 sb.sem_op = 1;
                 semop(semd, &sb, 1);
                 sleep(1);
@@ -203,25 +387,27 @@ int clientLogic(int server_socket, int filtered){
         // the client doesn't have permission to edit the post
         else{
             read(server_socket, input, sizeof(input));
-            printf("%s", input);
+            printw("%s", input);
             sleep(1);
         }
     }
-    // check if the inputted command is [delete]
     else if(strcmp(input, "delete") == 0){
         semop(semd, &sb, 1);
+        char post_name[BUFFER_SIZE];
+        int num;
         // make sure user has permissions
         
         // delete post file
         // delete title from forum.txt
         // down data by 1
         char pid[BUFFER_SIZE];
-        printf("===================================================\n");
+        printw("===================================================\n");
 
         // asks the user for which post they would like to delete and sends it to the server
-        printf("Which post would you like to delete?(# only): ");
-        fgets(input, sizeof(input), stdin);
-        printf("===================================================\n");
+        printw("Which post would you like to delete?(# only): ");
+        getstr(input);
+        strcat(input, "\n");
+        printw("===================================================\n");
         write(server_socket, input, sizeof(input));
 
         // gets the client pid and sends it to the server
@@ -233,15 +419,97 @@ int clientLogic(int server_socket, int filtered){
 
         // the client does have permission to delete the file 
         if(strcmp(input, "NO") != 0) {
-            printf("\t\tFILE DELETED\n===================================================\n"); 
+            printw("\t\tFILE DELETED\n===================================================\n"); 
             sb.sem_op = 1;
             semop(semd, &sb, 1);
             sleep(1);        
         }
         // tells the client they don't have permission delete the post
         else{
-            read(server_socket, input, sizeof(input));
-            printf("%s", input);
+            sprintf(post_name, "p%d", num);
+            int post = open(post_name, O_RDONLY, 0);
+            char* content;
+            file_to_string(post_name,content);
+            printw("Current content of %s: \n%s", post_name, content);
+            close(post);
+            printw("Would you like to edit the title or content of this post (title, content): ");
+            char choice[BUFFER_SIZE];
+            getstr(choice);
+            printw("What would you like to replace it with: ");
+            char replacement[BUFFER_SIZE];
+            getstr(replacement);
+
+            FILE *file, *tempFile;
+            char buffer[BUFFER_SIZE];
+            int lineToReplace = num; // The line number to replace
+            char *newLine = replacement; // The new line content
+            char replacement1[BUFFER_SIZE+10];
+            sprintf(replacement1,"p%d: %s",num,replacement);
+            char *newLine1 = replacement1;
+            int currentLine = 1;
+
+            if (strcmp(choice,"title\n")==0) {
+                file = fopen("forum.txt", "r");
+                tempFile = fopen("temp.txt", "w");
+
+                if (file == NULL || tempFile == NULL) {
+                    perror("Error opening file!\n");
+                }
+
+                // Read from the original file and write to the temporary file
+                while (fgets(buffer, BUFFER_SIZE, file) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == lineToReplace) {
+                        fputs(newLine1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                // Close the files
+                fclose(file);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove("forum.txt");
+                rename("temp.txt", "forum.txt");
+            }
+            
+            else if (strcmp(choice,"content\n")==0) {
+                FILE * pFile = fopen(post_name, "r");
+                tempFile = fopen("temp.txt", "w");
+
+                memset(buffer,0,sizeof(buffer));
+                memset(replacement1,0,sizeof(replacement1));
+                sprintf(replacement1,"p%d: %s",num,replacement);
+                printw("Replacment: %s",replacement1);
+
+
+                currentLine = 1;
+
+                while (fgets(buffer, BUFFER_SIZE, pFile) != NULL) {
+                    // If the current line is the line to replace, write the new line to the temp file
+                    if (currentLine == 1) {
+                        fputs(replacement1, tempFile);
+                    } else {
+                        // Otherwise, write the original line
+                        fputs(buffer, tempFile);
+                    }
+                    currentLine++;
+                }
+
+                fclose(pFile);
+                fclose(tempFile);
+
+                // Delete the original file and rename the temporary file to the original file name
+                remove(post_name);
+                rename("temp.txt", post_name);
+            }
+            else {
+                printw("Not a valid command!\n");
+            }
             sb.sem_op = 1;
             semop(semd, &sb, 1);
             sleep(1);
@@ -251,9 +519,10 @@ int clientLogic(int server_socket, int filtered){
     else if(strcmp(input, "search") == 0){
         // prompts the user for a keyword to send to the server
         char keyword[BUFFER_SIZE];
-        printf("===================================================\n");
-        printf("What keyword would you like to search: ");
-        fgets(keyword, sizeof(keyword), stdin);
+        printw("===================================================\n");
+        printw("What keyword would you like to search: ");
+        getstr(keyword);
+        strcat(keyword, "\n");
         keyword[strlen(keyword)-1] = '\0';
         write(server_socket, keyword, sizeof(keyword));
 
@@ -261,19 +530,23 @@ int clientLogic(int server_socket, int filtered){
         char filtered[BUFFER_SIZE] = "";
         read(server_socket, filtered, sizeof(filtered));
         clear();
-        printf("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
-
+        printw("===================================================\nPosts Containing [%s]:\n %s\n===================================================\n", keyword, filtered);
+        refresh();
+        char trash[BUFFER_SIZE];
+        getstr(trash);
         // returning 1 to turn filtered status true
         return 1;
     }
     // check if the inputted command is [sort]
     else if(strcmp(input, "sort") == 0){
-        printf("===================================================\n");
+        printw("===================================================\n");
 
         // asks the user for which form of sort (alphabetical, recency) for the list and sends it to the server
-        printf("How would you like your post sorted?(alphabetical, recency): ");
-        fgets(input, sizeof(input), stdin);
-        printf("===================================================\n");
+        printw("How would you like your post sorted?(alphabetical, recency): ");
+        getstr(input);
+        strcat(input, "\n");
+        printw("===================================================\n");
+        refresh();
         input[strlen(input)-1] = '\0';
         write(server_socket, input, sizeof(input));
 
@@ -286,38 +559,106 @@ int clientLogic(int server_socket, int filtered){
             read(server_socket, content, sizeof(content));
             clear();
             for(int i = 0; i < strlen(input); i++) input[i] = toupper(input[i]);
-            printf("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
+            printw("%s SORTED: \n===================================================\n%s===================================================\n", input, content);
+            refresh();
+            char trash[BUFFER_SIZE];
+            getstr(trash);
             return 1;
         }
         else{
             // tells the client the inputed choice is invalid
             read(server_socket, reply, sizeof(reply));
-            printf("\t\tINVALID CHOICE\n===================================================\n");
+            printw("\t\tINVALID CHOICE\n===================================================\n");
+            refresh();
             sleep(1);
         }
-    }
+        }
     else {
         // tells the client the inputed choice is invalid
-        printf("===================================================\n");
-        printf("NOT A VALID COMMAND\n");
-        printf("===================================================\n");
+        printw("===================================================\n");
+        printw("NOT A VALID COMMAND\n");
+        printw("===================================================\n");
+        printw("Not a valid command!\n");
     }
-    //upping semaphore
-    // sb.sem_op = 1;
-    // semop(semd, &sb, 1);
-    return 0;
+    //downing semaphore
+    sb.sem_op = 1;
+    semop(semd, &sb, 1);
+    printw("\n");
 
 }
 
 
+int current_position = 0;
+
+// Key listener thread function
+void* key_listener(void* p) {
+    int ch;
+    while (1) {
+        ch = getch();
+        if(ch == KEY_UP) {
+            current_position = MAX(0, current_position - 1);
+        } else if(ch == KEY_DOWN) {
+            current_position++;
+        }
+        // Trigger display update here if needed
+    }
+    return NULL;
+}
+
+//outdated code for displaying last 5 lines
+// FILE* forum1 = fopen("forum.txt","r");
+//         if (forum1 == NULL) {
+//             perror("Error opening file");
+//             return 1;
+//         }
+
+//         // Seek to the end of the file
+//         fseek(forum1, 0, SEEK_END);
+//         filePos = ftell(forum1);
+
+//         // Move backwards through the file to find the 5th last newline
+//         while (lineCount < targetLine && filePos >= 0) {
+//             fseek(forum1, --filePos, SEEK_SET);
+//             if (fgetc(forum1) == '\n') {
+//                 lineCount++;
+//             }
+//         }
+
+//         // Read and print the last 5 lines
+//         if (lineCount < targetLine) {
+//             // The file has less than 5 lines, so go to the start
+//             fseek(forum1, 0, SEEK_SET);
+//         } else {
+//             // Go to the start of the line
+//             fseek(forum1, filePos + 1, SEEK_SET);
+//         }
+
+//         for (int i = 0;i<lineCount;i++) {
+//             if (fgets(lines[i], MAX_LINE_LENGTH, forum1) != NULL) {
+//                 printf("%s",lines[i]);
+//             }
+//         }
+//         fclose(forum1);
+
+
 int main(int argc, char *argv[] ) {
-    printf("client online \n");
+    printw("client online \n");
+    for (int i = 1; i < NSIG; i++) {
+        signal(i, universal_signal_handler);
+    }
+    signal(SIGSEGV, sighandler);  // Catch segmentation fault
 
     // checks for the IP of the server the client should connect to
     clear();
     char* IP = NULL;
-    if(argc>1){
-        IP=argv[1];
+    initscr();
+    cbreak();
+    // noecho();
+    keypad(stdscr, TRUE);
+    signal(SIGINT, sighandler);
+
+    if (argc > 1) {
+        IP = argv[1];
     }
 
     // sets the forum display filtered status to false
@@ -328,17 +669,17 @@ int main(int argc, char *argv[] ) {
         // connect to the server through IP
         int server_socket = client_tcp_handshake(IP);
 
-        // //creates shared memory
-        // int shmid = shmget(KEY, sizeof(int), 0640);
-        // int* data = shmat(shmid, 0, 0);
+        // // //creates shared memory
+        // // int shmid = shmget(KEY, sizeof(int), 0640);
+        // // int* data = shmat(shmid, 0, 0);
         
-        // char line[BUFFER_SIZE];
+        // // char line[BUFFER_SIZE];
         // char lines[5][BUFFER_SIZE];
-        // int NUM_LINES = 5;
-        // int line_nums[NUM_LINES];
-        // char buffer[MAX_LINE_LENGTH];
-        // long filePos;
-        // int lineCount = 0, targetLine = 5;
+        // // int NUM_LINES = 5;
+        // // int line_nums[NUM_LINES];
+        // // char buffer[MAX_LINE_LENGTH];
+        // // long filePos;
+        // // int lineCount = 0, targetLine = 5;
 
         // opens file
         // FILE* forum1 = fopen("forum.txt","r");
@@ -376,6 +717,10 @@ int main(int argc, char *argv[] ) {
         // fclose(forum1);
         // 
         
+
+    while (!exit_flag) {
+        int server_socket = client_tcp_handshake(IP);
+        display_last_five_lines();
         // sets the forum filter display status to the the previous iteration of clientLogic()
         filtered = clientLogic(server_socket, filtered);
 
@@ -384,5 +729,9 @@ int main(int argc, char *argv[] ) {
             clear();
         }
     }
+    printw("closed client\n");
+    refresh();
+    endwin();
+    return 0;
+    }
 }
-
