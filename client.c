@@ -187,11 +187,11 @@ int clientLogic(int server_socket, int filtered){
     read(server_socket, forum, sizeof(forum));
     
     // prints the forum if the filtered status is false
-    if (filtered == 0){
-        printw("MOST RECENT POSTS:\n===================================================\n");
-        printw("%s===================================================\n", forum);
-        printw("\n");
-    }
+    // if (filtered == 0){
+    //     printw("MOST RECENT POSTS:\n===================================================\n");
+    //     printw("%s===================================================\n", forum);
+    //     printw("\n");
+    // }
     refresh();
     // memset(input, 0, sizeof(input));
     // read(server_socket, input, sizeof(input));
@@ -423,6 +423,7 @@ int clientLogic(int server_socket, int filtered){
         // the client does have permission to delete the file 
         if(strcmp(input, "NO") != 0) {
             printw("\t\tFILE DELETED\n===================================================\n"); 
+            refresh();
             sb.sem_op = 1;
             semop(semd, &sb, 1);
             sleep(1);        
@@ -503,8 +504,8 @@ int clientLogic(int server_socket, int filtered){
         printw("Not a valid command!\n");
     }
     //downing semaphore
-    sb.sem_op = 1;
-    semop(semd, &sb, 1);
+    // sb.sem_op = 1;
+    // semop(semd, &sb, 1);
     printw("\n");
 
 }
